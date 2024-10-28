@@ -61,6 +61,12 @@
             <artifactId>xiaohutu-generator</artifactId>
         </dependency>
 
+        <!--用户模块-->
+        <dependency>
+            <groupId>top.xiaohutu</groupId>
+            <artifactId>xiaohutu-user</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>
