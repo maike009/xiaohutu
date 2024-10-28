@@ -10,8 +10,7 @@
         />
       </el-form-item>
       <el-form-item label="性别" prop="gender">
-        <el-select v-model="queryParams.gender" placeholder="请选择性别" clearable
-                   style="width: 180px">
+        <el-select v-model="queryParams.gender" placeholder="请选择性别" clearable style="width: 190px">
           <el-option
             v-for="dict in sys_user_sex"
             :key="dict.value"
@@ -28,24 +27,10 @@
           @keyup.enter="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="手机号" prop="phone">
-        <el-input
-          v-model="queryParams.phone"
-          placeholder="请输入手机号"
-          clearable
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="用户邮件" prop="email">
-        <el-input
-          v-model="queryParams.email"
-          placeholder="请输入用户邮件"
-          clearable
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
+
+
       <el-form-item label="帐号状态" prop="status">
-        <el-select v-model="queryParams.status" placeholder="请选择帐号状态" clearable style="width: 180px">
+        <el-select v-model="queryParams.status" placeholder="请选择帐号状态" clearable style="width: 190px">
           <el-option
             v-for="dict in user_status"
             :key="dict.value"
@@ -55,7 +40,7 @@
         </el-select>
       </el-form-item>
       <el-form-item label="是否注销" prop="delFlag">
-        <el-select v-model="queryParams.delFlag" placeholder="请选择是否注销" clearable style="width: 180px">
+        <el-select v-model="queryParams.delFlag" placeholder="请选择注销状态" clearable style="width: 190px">
           <el-option
             v-for="dict in user_del_flag"
             :key="dict.value"
@@ -122,7 +107,7 @@
 
     <el-table v-loading="loading" :data="userList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="用户id" align="center" prop="id" />
+      <el-table-column label="用户id" align="center" prop="id" width="80"/>
       <el-table-column label="用户名" align="center" prop="userName" />
       <el-table-column label="用户头像地址" align="center" prop="avatar" width="100">
         <template #default="scope">
@@ -260,7 +245,6 @@
 
 <script setup name="User">
 import { listUser, getUser, delUser, addUser, updateUser } from "@/api/user/user";
-
 const { proxy } = getCurrentInstance();
 const { user_status, sys_user_sex, user_del_flag } = proxy.useDict('user_status', 'sys_user_sex', 'user_del_flag');
 
@@ -416,7 +400,7 @@ function submitForm() {
 /** 删除按钮操作 */
 function handleDelete(row) {
   const _ids = row.id || ids.value;
-  proxy.$modal.confirm('是否确认删除前台用户管理编号为"' + _ids + '"的数据项？').then(function() {
+  proxy.$modal.confirm('是否确认删除前台用户名为"' + row.userName + '"的数据项？').then(function() {
     return delUser(_ids);
   }).then(() => {
     getList();
