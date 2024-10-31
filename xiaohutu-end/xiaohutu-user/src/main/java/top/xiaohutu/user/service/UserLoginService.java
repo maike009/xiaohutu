@@ -1,4 +1,4 @@
-package top.xiaohutu.framework.web.service;
+package top.xiaohutu.user.service;
 
 import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,27 +27,29 @@ import top.xiaohutu.common.utils.ip.IpUtils;
 import top.xiaohutu.framework.manager.AsyncManager;
 import top.xiaohutu.framework.manager.factory.AsyncFactory;
 import top.xiaohutu.framework.security.context.AuthenticationContextHolder;
+import top.xiaohutu.framework.web.service.TokenService;
 import top.xiaohutu.system.service.ISysConfigService;
 import top.xiaohutu.system.service.ISysUserService;
+import top.xiaohutu.user.domain.model.FrontLoginUser;
 
 /**
  * 登录校验方法
- * 
- * @author ruoyi
+ *
+ * @author maike
  */
 @Component
-public class SysLoginService
+public class UserLoginService
 {
     @Autowired
-    private TokenService tokenService;
+    private FrontUserTokenService tokenService;
 
     @Autowired
-    @Qualifier("authenticationManager")
-    private AuthenticationManager authenticationManager;
+    @Qualifier("frontAuthenticationManager")
+    private AuthenticationManager frontAuthenticationManager;
 
     @Autowired
     private RedisCache redisCache;
-    
+
     @Autowired
     private ISysUserService userService;
 
@@ -56,7 +58,7 @@ public class SysLoginService
 
     /**
      * 登录验证
-     * 
+     *
      * @param username 用户名
      * @param password 密码
      * @param code 验证码
@@ -76,7 +78,7 @@ public class SysLoginService
             UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(username, password);
             AuthenticationContextHolder.setContext(authenticationToken);
             // 该方法会去调用UserDetailsServiceImpl.loadUserByUsername
-            authentication = authenticationManager.authenticate(authenticationToken);
+            authentication = frontAuthenticationManager.authenticate(authenticationToken);
         }
         catch (Exception e)
         {
@@ -96,15 +98,15 @@ public class SysLoginService
             AuthenticationContextHolder.clearContext();
         }
         AsyncManager.me().execute(AsyncFactory.recordLogininfor(username, Constants.LOGIN_SUCCESS, MessageUtils.message("user.login.success")));
-        LoginUser loginUser = (LoginUser) authentication.getPrincipal();
-        recordLoginInfo(loginUser.getUserId());
+        FrontLoginUser loginUser = (FrontLoginUser) authentication.getPrincipal();
+        recordLoginInfo(loginUser.getUser().getId());
         // 生成token
         return tokenService.createToken(loginUser);
     }
 
     /**
      * 校验验证码
-     * 
+     *
      * @param username 用户名
      * @param code 验证码
      * @param uuid 唯一标识

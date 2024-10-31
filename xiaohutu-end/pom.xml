@@ -51,7 +51,7 @@
             <dependency>
                 <groupId>org.springframework.security</groupId>
                 <artifactId>spring-security-bom</artifactId>
-                <version>${spring-security.version}</version>
+                <version>5.8.7</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>

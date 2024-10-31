@@ -111,6 +111,11 @@ public class UserServiceImpl implements IUserService
         return userMapper.deleteUserById(id);
     }
 
+    @Override
+    public User selectUserByName(String username) {
+        return userMapper.selectUserByName(username);
+    }
+
     /**
      * 新增用户详情信息
      * 

@@ -73,6 +73,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         from tb_user_info
         where user_id = #{user_id}
     </select>
+    <select id="selectUserByName" resultType="top.xiaohutu.user.domain.User">
+        select id, user_name, password, avatar, gender, nick_name, phone, email, status, del_flag, login_ip, login_date, create_by, create_time, update_by, update_time, remark
+        from tb_user
+        where user_name = #{userName}
+    </select>
 
     <insert id="insertUser" parameterType="User" useGeneratedKeys="true" keyProperty="id">
         insert into tb_user

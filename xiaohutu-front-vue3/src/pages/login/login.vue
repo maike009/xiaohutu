@@ -1,7 +1,7 @@
 <script setup>
 // 登录参数
 import { ref } from 'vue'
-import { getCodeImgAPI } from '@/services/login'
+import { getCodeImgAPI, loginAPI } from '@/services/login'
 
 const loginForm = ref({
   userName: 'xiaohutu',
@@ -62,9 +62,11 @@ const loginRef = ref()
 function handleLogin() {
   loginRef.value
     .validate()
-    .then((res) => {
+    .then(async (formdata) => {
       console.log('登录请求')
-      console.log('表单数据', res)
+      console.log('表单数据', formdata)
+      const res = await loginAPI(loginForm.value)
+      console.log(res)
       // ...你的登录逻辑
     })
     .catch((err) => {

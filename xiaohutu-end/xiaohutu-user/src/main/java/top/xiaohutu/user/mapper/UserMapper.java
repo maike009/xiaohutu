@@ -84,4 +84,6 @@ public interface UserMapper
      * @return 结果
      */
     public int deleteUserInfoByUserId(Long id);
+
+    User selectUserByName(String username);
 }

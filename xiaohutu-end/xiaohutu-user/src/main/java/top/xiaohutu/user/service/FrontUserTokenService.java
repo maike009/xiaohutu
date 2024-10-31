@@ -1,9 +1,9 @@
-package top.xiaohutu.framework.web.service;
+package top.xiaohutu.user.service;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import javax.servlet.http.HttpServletRequest;
+import eu.bitwalker.useragentutils.UserAgent;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,10 +18,12 @@ import top.xiaohutu.common.utils.StringUtils;
 import top.xiaohutu.common.utils.ip.AddressUtils;
 import top.xiaohutu.common.utils.ip.IpUtils;
 import top.xiaohutu.common.utils.uuid.IdUtils;
-import eu.bitwalker.useragentutils.UserAgent;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import top.xiaohutu.user.domain.model.FrontLoginUser;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * token验证处理
@@ -29,9 +31,9 @@ import io.jsonwebtoken.SignatureAlgorithm;
  * @author ruoyi
  */
 @Component
-public class TokenService
+public class FrontUserTokenService
 {
-    private static final Logger log = LoggerFactory.getLogger(TokenService.class);
+    private static final Logger log = LoggerFactory.getLogger(FrontUserTokenService.class);
 
     // 令牌自定义标识
     @Value("${token.adminHeader}")
@@ -62,7 +64,7 @@ public class TokenService
      *
      * @return 用户信息
      */
-    public LoginUser getLoginUser(HttpServletRequest request)
+    public FrontLoginUser getFrontLoginUser(HttpServletRequest request)
     {
         // 获取请求携带的令牌
         String token = getToken(request);
@@ -74,7 +76,7 @@ public class TokenService
                 // 解析对应的权限以及用户信息
                 String uuid = (String) claims.get(Constants.LOGIN_USER_KEY);
                 String userKey = getTokenKey(uuid);
-                LoginUser user = redisCache.getCacheObject(userKey);
+                FrontLoginUser user = redisCache.getCacheObject(userKey);
                 return user;
             }
             catch (Exception e)
@@ -88,7 +90,7 @@ public class TokenService
     /**
      * 设置用户身份信息
      */
-    public void setLoginUser(LoginUser loginUser)
+    public void setFrontLoginUser(FrontLoginUser loginUser)
     {
         if (StringUtils.isNotNull(loginUser) && StringUtils.isNotEmpty(loginUser.getToken()))
         {
@@ -99,7 +101,7 @@ public class TokenService
     /**
      * 删除用户身份信息
      */
-    public void delLoginUser(String token)
+    public void delFrontLoginUser(String token)
     {
         if (StringUtils.isNotEmpty(token))
         {
@@ -114,7 +116,7 @@ public class TokenService
      * @param loginUser 用户信息
      * @return 令牌
      */
-    public String createToken(LoginUser loginUser)
+    public String createToken(FrontLoginUser loginUser)
     {
         String token = IdUtils.fastUUID();
         loginUser.setToken(token);
@@ -132,7 +134,7 @@ public class TokenService
      * @param loginUser
      * @return 令牌
      */
-    public void verifyToken(LoginUser loginUser)
+    public void verifyToken(FrontLoginUser loginUser)
     {
         long expireTime = loginUser.getExpireTime();
         long currentTime = System.currentTimeMillis();
@@ -147,7 +149,7 @@ public class TokenService
      *
      * @param loginUser 登录信息
      */
-    public void refreshToken(LoginUser loginUser)
+    public void refreshToken(FrontLoginUser loginUser)
     {
         loginUser.setLoginTime(System.currentTimeMillis());
         loginUser.setExpireTime(loginUser.getLoginTime() + expireTime * MILLIS_MINUTE);
@@ -161,7 +163,7 @@ public class TokenService
      *
      * @param loginUser 登录信息
      */
-    public void setUserAgent(LoginUser loginUser)
+    public void setUserAgent(FrontLoginUser loginUser)
     {
         UserAgent userAgent = UserAgent.parseUserAgentString(ServletUtils.getRequest().getHeader("User-Agent"));
         String ip = IpUtils.getIpAddr();
@@ -219,18 +221,20 @@ public class TokenService
      */
     private String getToken(HttpServletRequest request)
     {
-            String adminToken = request.getHeader(adminHeader);
-                if (StringUtils.isNotEmpty(adminToken) && adminToken.startsWith(Constants.TOKEN_PREFIX))
-                {
-                    adminToken = adminToken.replace(Constants.TOKEN_PREFIX, "");
-                    return adminToken;
-                }
+        if (request.getHeader("token-type") == "admin"){
+            String token = request.getHeader(adminHeader);
+            if (StringUtils.isNotEmpty(token) && token.startsWith(Constants.TOKEN_PREFIX))
+            {
+                token = token.replace(Constants.TOKEN_PREFIX, "");
+            }
+            return token;
+        } else {
             String token = request.getHeader(frontHeader);
             if (StringUtils.isNotEmpty(token) && token.startsWith(Constants.TOKEN_PREFIX))
             {
                 return token;
             }
-
+        }
         return null;
 
     }

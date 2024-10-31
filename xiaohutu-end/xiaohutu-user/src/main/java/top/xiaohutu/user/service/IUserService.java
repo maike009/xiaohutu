@@ -58,4 +58,6 @@ public interface IUserService
      * @return 结果
      */
     public int deleteUserById(Long id);
+
+    User selectUserByName(String username);
 }
