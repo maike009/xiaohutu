@@ -51,6 +51,17 @@ public class SysLoginController
         return ajax;
     }
 
+    @PostMapping("/frontLogin")
+    public AjaxResult frontLogin(@RequestBody LoginBody loginBody)
+    {
+        AjaxResult ajax = AjaxResult.success();
+        // 生成令牌
+        String token = loginService.login(loginBody.getUsername(), loginBody.getPassword(), loginBody.getCode(),
+                loginBody.getUuid());
+        ajax.put(Constants.TOKEN, token);
+        return ajax;
+    }
+
     /**
      * 获取用户信息
      * 

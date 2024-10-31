@@ -34,6 +34,11 @@ public class UserController extends BaseController
     @Autowired
     private IUserService userService;
 
+
+    @GetMapping("/hello")
+    public AjaxResult getHello(){
+        return AjaxResult.success("操作成功", "hello security");
+    }
     /**
      * 查询前台用户管理列表
      */

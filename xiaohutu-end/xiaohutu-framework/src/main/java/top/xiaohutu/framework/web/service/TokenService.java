@@ -34,8 +34,11 @@ public class TokenService
     private static final Logger log = LoggerFactory.getLogger(TokenService.class);
 
     // 令牌自定义标识
-    @Value("${token.header}")
-    private String header;
+    @Value("${token.adminHeader}")
+    private String adminHeader;
+
+    @Value("${token.frontHeader}")
+    private String frontHeader;
 
     // 令牌秘钥
     @Value("${token.secret}")
@@ -216,12 +219,22 @@ public class TokenService
      */
     private String getToken(HttpServletRequest request)
     {
-        String token = request.getHeader(header);
-        if (StringUtils.isNotEmpty(token) && token.startsWith(Constants.TOKEN_PREFIX))
-        {
-            token = token.replace(Constants.TOKEN_PREFIX, "");
+        if (request.getHeader("token-type") == "admin"){
+            String token = request.getHeader(adminHeader);
+            if (StringUtils.isNotEmpty(token) && token.startsWith(Constants.TOKEN_PREFIX))
+            {
+                token = token.replace(Constants.TOKEN_PREFIX, "");
+            }
+            return token;
+        } else {
+            String token = request.getHeader(frontHeader);
+            if (StringUtils.isNotEmpty(token) && token.startsWith(Constants.TOKEN_PREFIX))
+            {
+                return token;
+            }
         }
-        return token;
+        return null;
+
     }
 
     private String getTokenKey(String uuid)

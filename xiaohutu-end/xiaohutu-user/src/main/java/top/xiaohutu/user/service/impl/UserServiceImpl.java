@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import top.xiaohutu.common.utils.StringUtils;
 import org.springframework.transaction.annotation.Transactional;
 import top.xiaohutu.user.domain.UserInfo;
+import top.xiaohutu.user.mapper.UserInfoMapper;
 import top.xiaohutu.user.mapper.UserMapper;
 import top.xiaohutu.user.domain.User;
 import top.xiaohutu.user.service.IUserService;
@@ -23,6 +24,8 @@ public class UserServiceImpl implements IUserService
 {
     @Autowired
     private UserMapper userMapper;
+    @Autowired
+    private UserInfoMapper userInfoMapper;
 
     /**
      * 查询前台用户管理

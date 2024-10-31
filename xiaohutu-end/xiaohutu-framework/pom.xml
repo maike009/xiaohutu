@@ -53,11 +53,19 @@
             <artifactId>oshi-core</artifactId>
         </dependency>
 
+        <!--lombok-->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+        </dependency>
+
         <!-- 系统模块-->
         <dependency>
             <groupId>top.xiaohutu</groupId>
             <artifactId>xiaohutu-system</artifactId>
         </dependency>
+
+
 
     </dependencies>
 

@@ -90,8 +90,9 @@ spring:
 
 # token配置
 token:
-  # 令牌自定义标识
-  header: Authorization
+  # 后端令牌自定义标识
+  adminHeader: token
+  frontHeader: Authorization
   # 令牌密钥
   secret: maike#abcdpoiuMK
   # 令牌有效期（默认30分钟）
