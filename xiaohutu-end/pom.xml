@@ -196,6 +196,12 @@
                 <version>${xiaohutu.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>top.xiaohutu</groupId>
+                <artifactId>xiaohutu-post</artifactId>
+                <version>${xiaohutu.version}</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 
@@ -207,6 +213,7 @@
         <module>xiaohutu-generator</module>
         <module>xiaohutu-common</module>
         <module>xiaohutu-user</module>
+        <module>xiaohutu-post</module>
     </modules>
     <packaging>pom</packaging>
 

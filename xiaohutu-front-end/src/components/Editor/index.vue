@@ -36,7 +36,7 @@ const { proxy } = getCurrentInstance();
 const quillEditorRef = ref();
 const uploadUrl = ref(import.meta.env.VITE_APP_BASE_API + "/common/upload"); // 上传的图片服务器地址
 const headers = ref({
-  Authorization: "Bearer " + getToken()
+  token: "Bearer " + getToken()
 });
 
 const props = defineProps({

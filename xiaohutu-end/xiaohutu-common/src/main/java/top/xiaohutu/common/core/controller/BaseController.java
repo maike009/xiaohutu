@@ -85,8 +85,10 @@ public class BaseController
         TableDataInfo rspData = new TableDataInfo();
         rspData.setCode(HttpStatus.SUCCESS);
         rspData.setMsg("查询成功");
+
         rspData.setRows(list);
         rspData.setTotal(new PageInfo(list).getTotal());
+        rspData.setPageNum(new PageInfo(list).getPageNum());
         return rspData;
     }
 

@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="top.xiaohutu.post.mapper.PostMapper">
+    
+    <resultMap type="PostVO" id="PostResult">
+        <result property="userName"    column="user_name"    />
+        <result property="nickName"    column="nick_name"    />
+        <result property="addr"    column="addr"    />
+        <result property="tagContent"    column="tag_content"    />
+        <result property="id"    column="id"    />
+        <result property="userId"    column="user_id"    />
+        <result property="contentText"    column="content_text"    />
+        <result property="contentImage"    column="content_image"    />
+        <result property="likeCount"    column="like_count"    />
+        <result property="commentCount"    column="comment_count"    />
+        <result property="tagId"    column="tag_id"    />
+        <result property="addressId"    column="address_id"    />
+        <result property="isPublic"    column="is_public"    />
+        <result property="favoriteCount"    column="favorite_count"    />
+        <result property="draftStatus"    column="draft_status"    />
+        <result property="status"    column="status"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectPostVo">
+        select user_name,nick_name,tag_content,addr, id, user_id, content_text, content_image, like_count, comment_count, tag_id, address_id, is_public, favorite_count, draft_status, status, create_by, create_time, update_by, update_time from post_user_view
+    </sql>
+
+    <select id="selectPostList" parameterType="postVO" resultMap="PostResult">
+        <include refid="selectPostVo"/>
+        <where>  
+            <if test="userId != null "> and user_id = #{userId}</if>
+            <if test="contentText != null  and contentText != ''"> and content_text = #{contentText}</if>
+            <if test="likeCount != null "> and like_count = #{likeCount}</if>
+            <if test="status != null "> and status = #{status}</if>
+        </where>
+    </select>
+
+
+    <select id="selectFrontPostList" resultMap="PostResult">
+        <include refid="selectPostVo"/>
+        <where>
+            <if test="searchValue != null "> and user_name like concat('%',#{searchValue},'%')</if>
+            <if test="searchValue != null  and contentText != ''"> or content_text like concat('%',#{searchValue},'%')</if>
+            and `status` = 0 and draft_status = 0 and is_public = 0
+        </where>
+    </select>
+    
+    <select id="selectPostById" parameterType="Long" resultMap="PostResult">
+        <include refid="selectPostVo"/>
+        where id = #{id}
+    </select>
+
+
+    <insert id="insertPost" parameterType="Post" useGeneratedKeys="true" keyProperty="id">
+        insert into tb_post
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="userId != null">user_id,</if>
+            <if test="contentText != null">content_text,</if>
+            <if test="contentImage != null">content_image,</if>
+            <if test="likeCount != null">like_count,</if>
+            <if test="commentCount != null">comment_count,</if>
+            <if test="tagId != null">tag_id,</if>
+            <if test="addressId != null">address_id,</if>
+            <if test="isPublic != null">is_public,</if>
+            <if test="favoriteCount != null">favorite_count,</if>
+            <if test="draftStatus != null">draft_status,</if>
+            <if test="status != null">status,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="userId != null">#{userId},</if>
+            <if test="contentText != null">#{contentText},</if>
+            <if test="contentImage != null">#{contentImage},</if>
+            <if test="likeCount != null">#{likeCount},</if>
+            <if test="commentCount != null">#{commentCount},</if>
+            <if test="tagId != null">#{tagId},</if>
+            <if test="addressId != null">#{addressId},</if>
+            <if test="isPublic != null">#{isPublic},</if>
+            <if test="favoriteCount != null">#{favoriteCount},</if>
+            <if test="draftStatus != null">#{draftStatus},</if>
+            <if test="status != null">#{status},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updatePost" parameterType="Post">
+        update tb_post
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="contentText != null">content_text = #{contentText},</if>
+            <if test="contentImage != null">content_image = #{contentImage},</if>
+            <if test="likeCount != null">like_count = #{likeCount},</if>
+            <if test="commentCount != null">comment_count = #{commentCount},</if>
+            <if test="tagId != null">tag_id = #{tagId},</if>
+            <if test="addressId != null">address_id = #{addressId},</if>
+            <if test="isPublic != null">is_public = #{isPublic},</if>
+            <if test="favoriteCount != null">favorite_count = #{favoriteCount},</if>
+            <if test="draftStatus != null">draft_status = #{draftStatus},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deletePostById" parameterType="Long">
+        delete from tb_post where id = #{id}
+    </delete>
+
+    <delete id="deletePostByIds" parameterType="String">
+        delete from tb_post where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

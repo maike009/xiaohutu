@@ -2,14 +2,21 @@ import { http } from '@/utils/http'
 
 export function loginAPI(loginUser) {
   return http({
-    url: '/frontLogin',
+    url: '/login',
     method: 'POST',
-    data: {
-      userName: loginUser.userName,
-      password: loginUser.password,
-      code: loginUser.code,
-      uuid: loginUser.uuid
-    }
+    data: loginUser
+  })
+}
+
+// 注册方法
+export function registerAPI(data) {
+  return http({
+    url: '/register',
+    headers: {
+      isToken: false
+    },
+    method: 'POST',
+    data: data
   })
 }
 

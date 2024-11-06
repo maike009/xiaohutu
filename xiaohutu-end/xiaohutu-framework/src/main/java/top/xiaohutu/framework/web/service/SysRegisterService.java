@@ -40,7 +40,8 @@ public class SysRegisterService
      */
     public String register(RegisterBody registerBody)
     {
-        String msg = "", username = registerBody.getUsername(), password = registerBody.getPassword();
+        String msg = "", username = registerBody.getUsername(),
+                password = registerBody.getPassword(), sex = registerBody.getSex(),nickname = registerBody.getNickname();
         SysUser sysUser = new SysUser();
         sysUser.setUserName(username);
 
@@ -58,12 +59,29 @@ public class SysRegisterService
         else if (StringUtils.isEmpty(password))
         {
             msg = "用户密码不能为空";
+        }else if (StringUtils.isEmpty(sex))
+        {
+            msg = "性别不能为空";
+        }
+        else if (StringUtils.isEmpty(nickname))
+        {
+            msg = "昵称不能为空";
+        }
+        else if (registerBody.getSex().length() > 1)
+        {
+            msg = "性别长度不能超过1个字符";
         }
         else if (username.length() < UserConstants.USERNAME_MIN_LENGTH
                 || username.length() > UserConstants.USERNAME_MAX_LENGTH)
         {
-            msg = "账户长度必须在2到20个字符之间";
+            msg = "账户长度必须在3到30个字符之间";
         }
+        else if (nickname.length() < UserConstants.USERNAME_MIN_LENGTH
+                || nickname.length() > UserConstants.USERNAME_MAX_LENGTH)
+        {
+            msg = "昵称长度必须在3到30个字符之间";
+        }
+
         else if (password.length() < UserConstants.PASSWORD_MIN_LENGTH
                 || password.length() > UserConstants.PASSWORD_MAX_LENGTH)
         {
@@ -77,6 +95,8 @@ public class SysRegisterService
         {
             sysUser.setNickName(username);
             sysUser.setPassword(SecurityUtils.encryptPassword(password));
+            sysUser.setSex(sex);
+            sysUser.setNickName(nickname);
             boolean regFlag = userService.registerUser(sysUser);
             if (!regFlag)
             {

@@ -1,17 +1,18 @@
 <script setup>
 // 登录参数
 import { ref } from 'vue'
-import { getCodeImgAPI, loginAPI } from '@/services/login'
+import { getCodeImgAPI, loginAPI, registerAPI } from '@/services/login'
+import { useUserStore } from '@/stores'
 
 const loginForm = ref({
-  userName: 'xiaohutu',
+  username: 'xiaohutu',
   password: 'admin123',
   rememberMe: 0,
   code: '',
   uuid: ''
 })
 const loginRules = ref({
-  userName: {
+  username: {
     rules: [
       {
         required: true,
@@ -59,34 +60,49 @@ const captchaEnabled = ref(true)
 const redirect = ref(undefined)
 
 const loginRef = ref()
+
+const userStore = useUserStore()
+/**
+ * 登录方法
+ */
 function handleLogin() {
   loginRef.value
     .validate()
     .then(async (formdata) => {
-      console.log('登录请求')
-      console.log('表单数据', formdata)
+      console.log('登录表单数据', formdata)
       const res = await loginAPI(loginForm.value)
-      console.log(res)
-      // ...你的登录逻辑
+      console.log(res.token)
+      userStore.setToken(res.token)
+      uni.showToast({
+        title: '登录成功',
+        icon: 'success'
+      })
+      uni.switchTab({
+        url: '/pages/index/index'
+      })
     })
     .catch((err) => {
       console.log('表单校验失败', err)
     })
 }
 const registerRef = ref()
+
 // 注册开关
 const isRegister = ref(false)
 
 // 注册表单校验
 const registerForm = ref({
-  userName: '',
-  nickName: '',
+  username: '',
+  nickname: '',
+  sex: '0',
   password: '',
-  confirmPassword: ''
+  confirmPassword: '',
+  code: '',
+  uuid: ''
 })
 
 const registerRules = ref({
-  userName: {
+  username: {
     rules: [
       {
         required: true,
@@ -100,7 +116,7 @@ const registerRules = ref({
       }
     ]
   },
-  nickName: {
+  nickname: {
     rules: [
       {
         required: true,
@@ -148,15 +164,25 @@ const registerRules = ref({
 function switchRegister() {
   isRegister.value = !isRegister.value
 }
-// 注册逻辑
+
+/**
+ *注册逻辑
+ */
 const handleRegister = () => {
   console.log(registerRef)
 
   registerRef.value
     ?.validate()
-    .then((res) => {
-      console.log('表单数据', res)
-      // ...你的注册逻辑
+    .then(async (formData) => {
+      console.log('注册表单数据', formData)
+      const res = await registerAPI(registerForm.value)
+      uni.showToast({
+        title: '注册成功',
+        icon: 'success'
+      })
+      uni.redirectTo({
+        url: '/pages/login/login'
+      })
     })
     .catch((err) => {
       console.log('表单数据校验失败', err)
@@ -170,6 +196,7 @@ function getCode() {
     if (captchaEnabled.value) {
       codeUrl.value = 'data:image/gif;base64,' + res.img
       loginForm.value.uuid = res.uuid
+      registerForm.value.uuid = res.uuid
     }
   })
 }
@@ -190,8 +217,8 @@ getCode()
     >
       <view class="title">欢迎登录小糊涂社区</view>
 
-      <uni-forms-item name="userName" required label="用户名">
-        <uni-easyinput prefixIcon="auth" v-model="loginForm.userName" placeholder="请输入用户名" />
+      <uni-forms-item name="username" required label="用户名">
+        <uni-easyinput prefixIcon="auth" v-model="loginForm.username" placeholder="请输入用户名" />
       </uni-forms-item>
 
       <uni-forms-item name="password" required label="密码" leftIcon="locked">
@@ -243,19 +270,29 @@ getCode()
     >
       <view class="title">用户注册</view>
       <!-- 注册表单内容 -->
-      <uni-forms-item name="userName" required label="用户名">
+      <uni-forms-item name="username" required label="用户名">
         <uni-easyinput
           prefixIcon="auth"
-          v-model="registerForm.userName"
+          v-model="registerForm.username"
           placeholder="请输入用户名"
         />
       </uni-forms-item>
-      <uni-forms-item name="nickName" required label="昵称" leftIcon="account">
+      <uni-forms-item name="nickname" required label="昵称" leftIcon="account">
         <uni-easyinput
           prefixIcon="contact"
-          v-model="registerForm.nickName"
+          v-model="registerForm.nickname"
           placeholder="请输入昵称"
         />
+      </uni-forms-item>
+      <uni-forms-item name="sex" required label="性别">
+        <uni-data-checkbox
+          v-model="registerForm.sex"
+          :localdata="[
+            { text: '男', value: '0' },
+            { text: '女', value: '1' },
+            { text: '保密', value: '2' }
+          ]"
+        ></uni-data-checkbox>
       </uni-forms-item>
       <uni-forms-item name="password" required label="密码" leftIcon="locked">
         <uni-easyinput
@@ -275,7 +312,7 @@ getCode()
       </uni-forms-item>
       <uni-forms-item label="验证码" name="code" required v-if="captchaEnabled">
         <uni-easyinput
-          v-model="loginForm.code"
+          v-model="registerForm.code"
           placeholder="请输入验证码"
           inputAlign="center"
           :inputBorder="false"

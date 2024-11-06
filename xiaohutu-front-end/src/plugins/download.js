@@ -15,7 +15,7 @@ export default {
       method: 'get',
       url: url,
       responseType: 'blob',
-      headers: { 'Authorization': 'Bearer ' + getToken() }
+      headers: { 'token': 'Bearer ' + getToken() }
     }).then((res) => {
       const isBlob = blobValidate(res.data);
       if (isBlob) {
@@ -32,7 +32,7 @@ export default {
       method: 'get',
       url: url,
       responseType: 'blob',
-      headers: { 'Authorization': 'Bearer ' + getToken() }
+      headers: { 'token': 'Bearer ' + getToken() }
     }).then((res) => {
       const isBlob = blobValidate(res.data);
       if (isBlob) {
@@ -50,7 +50,7 @@ export default {
       method: 'get',
       url: url,
       responseType: 'blob',
-      headers: { 'Authorization': 'Bearer ' + getToken() }
+      headers: { 'token': 'Bearer ' + getToken() }
     }).then((res) => {
       const isBlob = blobValidate(res.data);
       if (isBlob) {

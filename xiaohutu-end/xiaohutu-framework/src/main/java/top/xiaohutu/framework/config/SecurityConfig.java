@@ -7,7 +7,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationManagerResolver;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -23,8 +22,6 @@ import top.xiaohutu.framework.config.properties.PermitAllUrlProperties;
 import top.xiaohutu.framework.security.filter.JwtAuthenticationTokenFilter;
 import top.xiaohutu.framework.security.handle.AuthenticationEntryPointImpl;
 import top.xiaohutu.framework.security.handle.LogoutSuccessHandlerImpl;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * spring security配置
@@ -72,27 +69,6 @@ public class SecurityConfig
     @Autowired
     private PermitAllUrlProperties permitAllUrl;
 
-
-    /**
-     * 自定义前台用户认证逻辑
-     * @param frontUserDetailsService
-     * @param bCryptPasswordEncoder
-     * @return
-     */
-    @Autowired
-    @Qualifier("frontUserDetailsServiceImpl")
-    UserDetailsService frontUserDetailsService;
-
-    @Autowired
-    BCryptPasswordEncoder bCryptPasswordEncoder;
-    @Bean("frontAuthenticationManager")
-    public AuthenticationManager frontAuthenticationManager(
-            ) {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setUserDetailsService(frontUserDetailsService);
-        provider.setPasswordEncoder(bCryptPasswordEncoder);
-        return new ProviderManager(provider);
-    }
     /**
      * 身份验证实现
      */
@@ -144,7 +120,7 @@ public class SecurityConfig
             .authorizeHttpRequests((requests) -> {
                 permitAllUrl.getUrls().forEach(url -> requests.antMatchers(url).permitAll());
                 // 对于登录login 注册register 验证码captchaImage 允许匿名访问
-                requests.antMatchers("/login","/frontLogin","/register", "/captchaImage").permitAll()
+                requests.antMatchers("/login","/register", "/captchaImage").permitAll()
                     // 静态资源，可匿名访问
                     .antMatchers(HttpMethod.GET, "/", "/*.html", "/**/*.html", "/**/*.css", "/**/*.js", "/profile/**").permitAll()
                     .antMatchers("/swagger-ui.html", "/swagger-resources/**", "/webjars/**", "/*/api-docs", "/druid/**").permitAll()

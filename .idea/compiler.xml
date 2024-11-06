@@ -11,6 +11,7 @@
         <module name="xiaohutu-framework" />
         <module name="xiaohutu-admin" />
         <module name="xiaohutu-quartz" />
+        <module name="xiaohutu-post" />
         <module name="xiaohutu-system" />
         <module name="xiaohutu-generator" />
       </profile>

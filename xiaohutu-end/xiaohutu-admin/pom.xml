@@ -61,10 +61,11 @@
             <artifactId>xiaohutu-generator</artifactId>
         </dependency>
 
-        <!--用户模块-->
+
+        <!--帖子模块-->
         <dependency>
             <groupId>top.xiaohutu</groupId>
-            <artifactId>xiaohutu-user</artifactId>
+            <artifactId>xiaohutu-post</artifactId>
         </dependency>
 
     </dependencies>

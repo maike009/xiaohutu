@@ -1,7 +1,17 @@
 <template>
-  <view class="content"> 首页 </view>
+  <search-bar @get-post-list="handleGetPostList"></search-bar>
+
+  <post-component></post-component>
 </template>
 
-<script setup></script>
+<script setup>
+import SearchBar from '@/components/serach/SearchBar.vue'
+import PostComponent from '@/components/postcontent/postComponent.vue'
+import { ref } from 'vue'
 
-<style></style>
+function handleGetPostList(searchValue) {
+  console.log(searchValue, 'from child')
+}
+</script>
+
+<style scoped></style>

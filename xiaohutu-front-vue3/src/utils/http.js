@@ -56,7 +56,7 @@ export const http = (options) => {
       success(res) {
         // 状态码 2xx，参考 axios 的设计
         if (res.statusCode >= 200 && res.statusCode < 300) {
-          console.log(res.data)
+          // console.log(res.data)
           // 提取核心数据 res.data
           if (res.data?.code >= 200 && res.data?.code < 300) {
             resolve(res.data)
@@ -69,7 +69,7 @@ export const http = (options) => {
             const userStore = useUserStore() // 假设你已经引入了 useMemberStore
             userStore.clearProfile()
             userStore.clearToken()
-            uni.navigateTo({ url: '/pages/login/login' })
+            uni.redirectTo({ url: '/pages/login/login' })
             reject(res)
           } else {
             // 其他错误 -> 根据后端错误信息轻提示

@@ -24,6 +24,9 @@ public class TableDataInfo implements Serializable
     /** 消息内容 */
     private String msg;
 
+    /** 当前页码 */
+    private int pageNum;
+
     /**
      * 表格数据对象
      */
@@ -41,6 +44,14 @@ public class TableDataInfo implements Serializable
     {
         this.rows = list;
         this.total = total;
+    }
+
+    public int getPageNum() {
+        return pageNum;
+    }
+
+    public void setPageNum(int pageNum) {
+        this.pageNum = pageNum;
     }
 
     public long getTotal()

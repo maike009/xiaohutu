@@ -226,7 +226,7 @@ public class TokenService
                     return adminToken;
                 }
             String token = request.getHeader(frontHeader);
-            if (StringUtils.isNotEmpty(token) && token.startsWith(Constants.TOKEN_PREFIX))
+            if (StringUtils.isNotEmpty(token))
             {
                 return token;
             }
