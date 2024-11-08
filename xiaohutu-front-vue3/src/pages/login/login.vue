@@ -5,8 +5,8 @@ import { getCodeImgAPI, loginAPI, registerAPI } from '@/services/login'
 import { useUserStore } from '@/stores'
 
 const loginForm = ref({
-  username: 'xiaohutu',
-  password: 'admin123',
+  username: 'test1',
+  password: '123456',
   rememberMe: 0,
   code: '',
   uuid: ''

@@ -120,7 +120,12 @@
   <view class="container">
     <view class="waterfall-container">
       <view v-for="(column, columnIndex) in columns" :key="columnIndex" class="waterfall-column">
-        <view v-for="item in column" :key="item.id" class="waterfall-item">
+        <view
+          v-for="item in column"
+          :key="item.id"
+          class="waterfall-item"
+          @click="goPostDetail(item)"
+        >
           <image
             class="item-image"
             :src="item.contentImage"
@@ -128,6 +133,27 @@
             @load="onImageLoad(item)"
           />
           <view class="item-text">{{ item.contentText }}</view>
+
+          <!-- 用户信息 -->
+          <view class="user-info">
+            <image class="avatar" :src="item.avatar || baseAvatarUrl" mode="aspectFill"></image>
+            <view class="user-text">
+              <text class="nickname">{{ item.nickName }}</text>
+              <text class="time">{{ formatTime(item.updateTime) }}</text>
+            </view>
+          </view>
+
+          <!-- 地址和标签 -->
+          <view class="post-meta" v-if="item.addr">
+            <view class="location" v-if="item.addr">
+              <uni-icons type="location" size="16"></uni-icons>
+              <text>{{ item.addr }}</text>
+            </view>
+            <view class="tag" v-if="item.tagContent">
+              <uni-icons type="tag" size="16"></uni-icons>
+              <text>{{ item.tagContent }}</text>
+            </view>
+          </view>
         </view>
       </view>
     </view>
@@ -136,25 +162,39 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, defineProps, watch } from 'vue'
 import { onReachBottom } from '@dcloudio/uni-app'
 import { getPostListAPI } from '@/services/post'
+import { baseUrl, baseAvatarUrl } from '@/utils/base'
+import { formatTime } from '@/utils/xiaohutu'
 
-const status = ref('more')
-const queryParams = ref({
-  pageNum: 1,
-  pageSize: 10,
-  nickName: null,
-  contentText: null
+// 父传的数据
+const props = defineProps({
+  searchValue: String
 })
+// 加载状态
+const status = ref('more')
+
+// 加载文本显示
 const contentText = ref({
   contentdown: '查看更多',
   contentrefresh: '加载中',
   contentnomore: '没有更多'
 })
+
+// 请求参数
+const queryParams = ref({
+  pageNum: 1,
+  pageSize: 10,
+  nickName: null,
+  contentText: null,
+  searchValue: props.searchValue
+})
+// 帖子数据
 const postList = ref([])
 const columnCount = 2 // 瀑布流布局的列数
 
+// 处理后适应瀑布流的数据
 const columns = computed(() => {
   const cols = Array.from({ length: columnCount }, () => [])
   postList.value.forEach((item, index) => {
@@ -162,13 +202,13 @@ const columns = computed(() => {
   })
   return cols
 })
-
+// 页面加载时加载帖子数据
 const loadPosts = async () => {
   try {
     const res = await getPostListAPI(queryParams.value)
     const rs = res.rows.map((item) => {
       const imgUrlArr = (item.contentImage ?? '').split(',')
-      item.contentImage = 'http://localhost:8080' + imgUrlArr[0]
+      item.contentImage = baseUrl + imgUrlArr[0]
       return item
     })
     postList.value = rs
@@ -182,12 +222,18 @@ const loadPosts = async () => {
     })
   }
 }
-
+// 跳转到帖子详情
+function goPostDetail(item) {
+  uni.navigateTo({
+    url: '/pages/postDetail/postDetail?id=' + item.id
+  })
+}
+// 上拉加载
 const loadMorePosts = async () => {
   if (status.value === 'loading' || status.value === 'no-more') return
 
   status.value = 'loading'
-  queryParams.value.pageNum = queryParams.value.pageNum + 1
+  queryParams.value.pageNum++
   try {
     const res = await getPostListAPI(queryParams.value)
     if (res.rows.length > 0) {
@@ -211,7 +257,7 @@ const loadMorePosts = async () => {
     })
   }
 }
-
+// 加载图片后获取宽高
 const onImageLoad = (item) => {
   // 在 uniapp 中，我们可以使用 uni.getImageInfo 来获取图片信息
   uni.getImageInfo({
@@ -225,7 +271,24 @@ const onImageLoad = (item) => {
     }
   })
 }
+watch(props, (newValue) => {
+  if (props.searchValue === '') {
+    queryParams.value.pageNum = 1
+    queryParams.value.pageSize = 10
+    queryParams.value.searchValue = null
+    status.value = 'more'
+    loadPosts()
+    return
+  }
+  if (props.searchValue !== null && props.searchValue !== undefined) {
+    queryParams.value.pageNum = 1
+    queryParams.value.pageSize = 10
+    queryParams.value.searchValue = newValue.searchValue
+    status.value = 'more'
 
+    loadPosts()
+  }
+})
 onMounted(() => {
   loadPosts()
 })
@@ -237,7 +300,7 @@ onReachBottom(() => {
 })
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .container {
   padding: 10rpx;
 }
@@ -257,6 +320,12 @@ onReachBottom(() => {
   background-color: #fff;
   border-radius: 16rpx;
   overflow: hidden;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.2);
+  transition: box-shadow 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.15);
+  }
 }
 
 .item-image {
@@ -269,5 +338,51 @@ onReachBottom(() => {
   padding: 16rpx;
   font-size: 28rpx;
   color: #333;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20rpx;
+
+  .avatar {
+    width: 80rpx;
+    height: 80rpx;
+    border-radius: 50%;
+    margin-right: 20rpx;
+  }
+
+  .user-text {
+    display: flex;
+    flex-direction: column;
+
+    .nickname {
+      font-size: 32rpx;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .time {
+      font-size: 24rpx;
+      color: #999;
+    }
+  }
+}
+.post-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+
+  .location,
+  .tag {
+    display: flex;
+    align-items: center;
+    font-size: 24rpx;
+    color: #666;
+
+    uni-icons {
+      margin-right: 6rpx;
+    }
+  }
 }
 </style>

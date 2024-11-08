@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="top.xiaohutu.post.mapper.TagMapper">
+    
+    <resultMap type="Tag" id="TagResult">
+        <result property="id"    column="id"    />
+        <result property="tagContent"    column="tag_content"    />
+        <result property="count"    column="count"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectTagVo">
+        select id, tag_content, count, create_by, create_time, update_by, update_time from tb_tag
+    </sql>
+
+    <select id="selectTagList" parameterType="Tag" resultMap="TagResult">
+        <include refid="selectTagVo"/>
+        <where>  
+            <if test="tagContent != null  and tagContent != ''"> and tag_content like concat('%',#{tagContent},'%')</if>
+        </where>
+    </select>
+    
+    <select id="selectTagById" parameterType="Long" resultMap="TagResult">
+        <include refid="selectTagVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertTag" parameterType="Tag" useGeneratedKeys="true" keyProperty="id">
+        insert into tb_tag
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="tagContent != null">tag_content,</if>
+            <if test="count != null">count,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="tagContent != null">#{tagContent},</if>
+            <if test="count != null">#{count},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateTag" parameterType="Tag">
+        update tb_tag
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="tagContent != null">tag_content = #{tagContent},</if>
+            <if test="count != null">count = #{count},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteTagById" parameterType="Long">
+        delete from tb_tag where id = #{id}
+    </delete>
+
+    <delete id="deleteTagByIds" parameterType="String">
+        delete from tb_tag where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

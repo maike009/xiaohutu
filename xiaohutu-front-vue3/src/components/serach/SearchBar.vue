@@ -23,18 +23,20 @@ function getPostList(res) {
 }
 
 function search(res) {
+  console.log('----search:', res)
   getPostList(res.value)
 }
 function input(res) {
   console.log('----input:', res)
 }
 function clear(res) {
+  console.log('----clear:', res)
   getPostList(res.value)
 }
 function blur(res) {}
 function focus(e) {}
 function cancel(res) {
-  getPostList(res.value)
+  getPostList('')
 }
 </script>
 <style lang="scss" scoped>

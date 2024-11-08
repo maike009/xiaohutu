@@ -17,5 +17,6 @@ public class XiaoHutuApplication
         // System.setProperty("spring.devtools.restart.enabled", "false");
         SpringApplication.run(XiaoHutuApplication.class, args);
         System.out.println("(♥◠‿◠)ﾉﾞ  小糊涂启动成功   ლ(´ڡ`ლ)ﾞ  \n" );
+        
     }
 }

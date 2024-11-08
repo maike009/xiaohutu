@@ -22,6 +22,18 @@ public class Post extends BaseEntity
     @Excel(name = "用户")
     private Long userId;
 
+    /** 帖子标题 */
+    @Excel(name = "帖子标题")
+    private String postTitle;
+
+    public String getPostTitle() {
+        return postTitle;
+    }
+
+    public void setPostTitle(String postTitle) {
+        this.postTitle = postTitle;
+    }
+
     /** 文本内容 */
     @Excel(name = "文本内容")
     private String contentText;

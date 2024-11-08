@@ -7,6 +7,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <resultMap type="PostVO" id="PostResult">
         <result property="userName"    column="user_name"    />
         <result property="nickName"    column="nick_name"    />
+        <result property="postTitle" column="post_title"/>
         <result property="addr"    column="addr"    />
         <result property="tagContent"    column="tag_content"    />
         <result property="id"    column="id"    />
@@ -28,7 +29,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <sql id="selectPostVo">
-        select user_name,nick_name,tag_content,addr, id, user_id, content_text, content_image, like_count, comment_count, tag_id, address_id, is_public, favorite_count, draft_status, status, create_by, create_time, update_by, update_time from post_user_view
+        select user_name,nick_name,post_title,tag_content,addr, id, user_id, content_text, content_image, like_count, comment_count, tag_id, address_id, is_public, favorite_count, draft_status, status, create_by, create_time, update_by, update_time from post_user_view
     </sql>
 
     <select id="selectPostList" parameterType="postVO" resultMap="PostResult">
@@ -46,7 +47,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <include refid="selectPostVo"/>
         <where>
             <if test="searchValue != null "> and user_name like concat('%',#{searchValue},'%')</if>
-            <if test="searchValue != null  and contentText != ''"> or content_text like concat('%',#{searchValue},'%')</if>
+            <if test="searchValue != null "> or content_text like concat('%',#{searchValue},'%')</if>
             and `status` = 0 and draft_status = 0 and is_public = 0
         </where>
     </select>

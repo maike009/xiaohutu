@@ -34,15 +34,15 @@
     </el-form>
 
     <el-row :gutter="10" class="mb8">
-      <el-col :span="1.5">
-        <el-button
-          type="primary"
-          plain
-          icon="Plus"
-          @click="handleAdd"
-          v-hasPermi="['post:post:add']"
-        >新增</el-button>
-      </el-col>
+<!--      <el-col :span="1.5">-->
+<!--        <el-button-->
+<!--          type="primary"-->
+<!--          plain-->
+<!--          icon="Plus"-->
+<!--          @click="handleAdd"-->
+<!--          v-hasPermi="['post:post:add']"-->
+<!--        >新增</el-button>-->
+<!--      </el-col>-->
       <el-col :span="1.5">
         <el-button
           type="success"
@@ -81,7 +81,19 @@
       <el-table-column label="用户" align="center" prop="userName" />
       <el-table-column label="用户昵称" align="center" prop="nickName" />
       <el-table-column label="发布地址" align="center" prop="addr" />
-      <el-table-column label="文本内容" align="center" prop="contentText" />
+      <el-table-column
+          label="帖子标题"
+          align="center"
+          prop="postTitle"
+          show-overflow-tooltip
+      />
+      <el-table-column
+          label="文本内容"
+          align="center"
+          prop="contentText"
+          show-overflow-tooltip
+      />
+
       <el-table-column label="图片地址" align="center" prop="contentImage" width="100">
         <template #default="scope">
           <image-preview :src="scope.row.contentImage" :width="50" :height="50"/>
@@ -126,39 +138,39 @@
     <el-dialog :title="title" v-model="open" width="500px" append-to-body>
       <el-form ref="postRef" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="用户" prop="userId">
-          <el-input v-model="form.userId" placeholder="请输入用户" />
+          <el-input v-model="form.userId" placeholder="请输入用户" disabled />
         </el-form-item>
         <el-form-item label="文本内容" prop="contentText">
-          <el-input v-model="form.contentText" type="textarea" placeholder="请输入内容" />
+          <el-input v-model="form.contentText" type="textarea" placeholder="请输入内容" disabled />
         </el-form-item>
         <el-form-item label="图片地址" prop="contentImage">
-          <image-upload v-model="form.contentImage"/>
+          <image-upload v-model="form.contentImage" disabled/>
         </el-form-item>
         <el-form-item label="点赞数" prop="likeCount">
-          <el-input v-model="form.likeCount" placeholder="请输入点赞数" />
+          <el-input v-model="form.likeCount" placeholder="请输入点赞数" disabled />
         </el-form-item>
         <el-form-item label="评论数" prop="commentCount">
-          <el-input v-model="form.commentCount" placeholder="请输入评论数" />
+          <el-input v-model="form.commentCount" placeholder="请输入评论数" disabled />
         </el-form-item>
         <el-form-item label="标签" prop="tagId">
-          <el-input v-model="form.tagId" placeholder="请输入标签" />
+          <el-input v-model="form.tagId" placeholder="请输入标签" disabled />
         </el-form-item>
         <el-form-item label="发布位置" prop="addressId">
-          <el-input v-model="form.addressId" placeholder="请输入发布位置" />
+          <el-input v-model="form.addressId" placeholder="请输入发布位置" disabled />
         </el-form-item>
         <el-form-item label="是否公开" prop="isPublic">
-          <el-input v-model="form.isPublic" placeholder="请输入是否公开" />
+          <el-input v-model="form.isPublic" placeholder="请输入是否公开" disabled />
         </el-form-item>
         <el-form-item label="收藏数量" prop="favoriteCount">
-          <el-input v-model="form.favoriteCount" placeholder="请输入收藏数量" />
+          <el-input v-model="form.favoriteCount" placeholder="请输入收藏数量" disabled />
         </el-form-item>
         <el-form-item label="帖子状态" prop="status">
           <el-select v-model="form.status" placeholder="请选择帖子状态">
             <el-option
-              v-for="dict in post_status"
-              :key="dict.value"
-              :label="dict.label"
-              :value="parseInt(dict.value)"
+                v-for="dict in post_status"
+                :key="dict.value"
+                :label="dict.label"
+                :value="parseInt(dict.value)"
             ></el-option>
           </el-select>
         </el-form-item>

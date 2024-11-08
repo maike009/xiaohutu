@@ -1,32 +1,17 @@
 <template>
-  <view>
-    <uni-section title="表单校验" type="line">
-      <view class="example">
-        <!-- 基础表单校验 -->
-        <uni-forms ref="valiForm" :rules="rules" :modelValue="valiFormData">
-          <uni-forms-item label="姓名" required name="name">
-            <uni-easyinput v-model="valiFormData.name" placeholder="请输入姓名" />
-          </uni-forms-item>
-          <uni-forms-item label="年龄" required name="age">
-            <uni-easyinput v-model="valiFormData.age" placeholder="请输入年龄" />
-          </uni-forms-item>
-          <uni-forms-item label="自我介绍" name="introduction">
-            <uni-easyinput
-              type="textarea"
-              v-model="valiFormData.introduction"
-              placeholder="请输入自我介绍"
-            />
-          </uni-forms-item>
-        </uni-forms>
-        <button type="primary" @click="submit()">提交</button>
-      </view>
-    </uni-section>
-  </view>
+  <view> 个人中心 </view>
 </template>
 
 <script setup>
 import { ref } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
+import { useTabStore } from '@/stores'
 
+onShow(() => {
+  const tabStore = useTabStore()
+  console.log('上一次的tab路径', tabStore.lastTab)
+  tabStore.setTaBList('user')
+})
 // 校验表单数据
 const valiFormData = ref({
   name: '',

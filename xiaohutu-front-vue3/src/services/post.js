@@ -6,10 +6,16 @@ export function getPostListAPI(query) {
   const { pageNum, pageSize } = query
   return http({
     url: '/post/post/frontList',
-    method: 'get',
-    params: {
-      pageNum,
-      pageSize
-    }
+    method: 'GET',
+    data: query
+  })
+}
+/**
+ * 获取帖子详情
+ */
+export function getPostDetailAPI(id) {
+  return http({
+    url: `/post/post/${id}`,
+    method: 'GET'
   })
 }

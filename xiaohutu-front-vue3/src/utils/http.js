@@ -20,6 +20,7 @@ const httpInterceptor = {
       'source-client': 'h5',
       ...options.header
     }
+
     // 4. 添加 token 请求头标识
     const userStore = useUserStore()
     const token = userStore.token

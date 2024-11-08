@@ -5,6 +5,7 @@ import java.util.List;
 import top.xiaohutu.common.utils.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import top.xiaohutu.common.utils.SecurityUtils;
 import top.xiaohutu.post.domain.vo.PostVO;
 import top.xiaohutu.post.mapper.PostMapper;
 import top.xiaohutu.post.domain.Post;
@@ -55,6 +56,7 @@ public class PostServiceImpl implements IPostService
     @Override
     public int insertPost(Post post)
     {
+        post.setUserId(SecurityUtils.getUserId());
         post.setCreateTime(DateUtils.getNowDate());
         return postMapper.insertPost(post);
     }

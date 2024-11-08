@@ -71,7 +71,6 @@ public class PostController extends BaseController
     /**
      * 获取帖子详细信息
      */
-    @PreAuthorize("@ss.hasPermi('post:post:query')")
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Long id)
     {
@@ -81,11 +80,11 @@ public class PostController extends BaseController
     /**
      * 新增帖子
      */
-    @PreAuthorize("@ss.hasPermi('post:post:add')")
     @Log(title = "帖子", businessType = BusinessType.INSERT)
     @PostMapping
     public AjaxResult add(@RequestBody Post post)
     {
+
         return toAjax(postService.insertPost(post));
     }
 
