@@ -71,7 +71,7 @@ function handleLogin() {
     .then(async (formdata) => {
       console.log('登录表单数据', formdata)
       const res = await loginAPI(loginForm.value)
-      console.log(res.token)
+      console.log(res, '登录数据')
       userStore.setToken(res.token)
       uni.showToast({
         title: '登录成功',

@@ -1,15 +1,18 @@
 <template>
-  <uni-search-bar
-    @confirm="search"
-    :focus="true"
-    v-model="searchValue"
-    @blur="blur"
-    @focus="focus"
-    @input="input"
-    @cancel="cancel"
-    @clear="clear"
-  >
-  </uni-search-bar>
+  <div class="search-box">
+    <uni-search-bar
+      @confirm="search"
+      :focus="true"
+      v-model="searchValue"
+      @blur="blur"
+      @focus="focus"
+      @input="input"
+      @cancel="cancel"
+      @clear="clear"
+      style="width: 90%; margin: 0 auto"
+    >
+    </uni-search-bar>
+  </div>
 </template>
 <script setup>
 import { ref } from 'vue'
@@ -40,6 +43,13 @@ function cancel(res) {
 }
 </script>
 <style lang="scss" scoped>
+.search-box {
+  position: fixed;
+  z-index: 99;
+  width: 100%;
+  height: 70px;
+  background: #ffffff;
+}
 .search-result {
   padding-top: 10px;
   padding-bottom: 20px;

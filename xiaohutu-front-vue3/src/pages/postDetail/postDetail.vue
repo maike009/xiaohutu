@@ -4,6 +4,7 @@ import { onLoad } from '@dcloudio/uni-app'
 import { getPostDetailAPI } from '@/services/post'
 import { baseUrl, baseAvatarUrl } from '@/utils/base'
 import { formatTime } from '@/utils/xiaohutu'
+
 // 帖子详情数据
 const postData = ref(null)
 const defaultAvatar = baseAvatarUrl // 默认头像路径
@@ -13,6 +14,7 @@ onLoad(async (options) => {
   console.log(options.id, 'postid')
   await getPostData(options.id)
 })
+
 // 获取帖子详情数据
 async function getPostData(postId) {
   try {
@@ -24,6 +26,7 @@ async function getPostData(postId) {
     // 可以在这里添加错误处理逻辑，比如显示错误消息
   }
 }
+
 // 处理点赞逻辑
 const isLike = ref(false)
 const like_type = computed(() => {
@@ -36,6 +39,7 @@ const like_type = computed(() => {
 function handlerLike(postId) {
   isLike.value = !isLike.value
 }
+
 // 处理收藏逻辑
 const isFavorite = ref(false)
 const favorite_type = computed(() => {
@@ -48,6 +52,7 @@ const favorite_type = computed(() => {
 function handlerFavorite(postId) {
   isFavorite.value = !isFavorite.value
 }
+
 // 图片预览
 const postImages = computed(() => {
   if (postData.value && postData.value.contentImage) {
@@ -67,6 +72,14 @@ const previewImage = (index) => {
 
 <template>
   <view class="post-detail" v-if="postData">
+    <!-- 标题 -->
+    <view class="post-title" v-if="postData.postTitle">
+      <text>{{ postData.postTitle }}</text>
+    </view>
+
+    <!-- 分割线 -->
+    <view class="divider"></view>
+
     <!-- 用户信息 -->
     <view class="user-info">
       <image class="avatar" :src="postData.avatar || defaultAvatar" mode="aspectFill"></image>
@@ -91,7 +104,7 @@ const previewImage = (index) => {
     </view>
 
     <!-- 地址和标签 -->
-    <view class="post-meta" v-if="postData.addr">
+    <view class="post-meta">
       <view class="location" v-if="postData.addr">
         <uni-icons type="location" size="16"></uni-icons>
         <text>{{ postData.addr }}</text>
@@ -122,10 +135,25 @@ const previewImage = (index) => {
     <text>加载中...</text>
   </view>
 </template>
+
 <style lang="scss" scoped>
 .post-detail {
   padding: 20rpx;
   background-color: #f8f8f8;
+}
+
+.post-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 20rpx;
+  padding: 0 20rpx;
+}
+
+.divider {
+  height: 1rpx;
+  background-color: #e0e0e0;
+  margin: 20rpx 0;
 }
 
 .user-info {
@@ -214,10 +242,6 @@ const previewImage = (index) => {
       margin-right: 6rpx;
     }
   }
-}
-.post-detail {
-  padding: 20rpx;
-  background-color: #f8f8f8;
 }
 
 .loading {

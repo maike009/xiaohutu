@@ -116,6 +116,14 @@ public class SysUserController extends BaseController
         return ajax;
     }
 
+    @GetMapping("/userInfo/{userId}")
+    public AjaxResult userInfo(@PathVariable("userId") Long userId)
+    {
+        SysUser user = userService.selectUserById(userId);
+        return AjaxResult.success(user);
+    }
+
+
     /**
      * 新增用户
      */

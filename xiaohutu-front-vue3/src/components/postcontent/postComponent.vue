@@ -132,7 +132,7 @@
             :mode="'widthFix'"
             @load="onImageLoad(item)"
           />
-          <view class="item-text">{{ item.contentText }}</view>
+          <view class="item-text">{{ item.postTitle ? item.postTitle : item.contentText }}</view>
 
           <!-- 用户信息 -->
           <view class="user-info">
@@ -144,14 +144,18 @@
           </view>
 
           <!-- 地址和标签 -->
-          <view class="post-meta" v-if="item.addr">
+          <view class="post-meta">
             <view class="location" v-if="item.addr">
               <uni-icons type="location" size="16"></uni-icons>
               <text>{{ item.addr }}</text>
             </view>
             <view class="tag" v-if="item.tagContent">
               <uni-icons type="tag" size="16"></uni-icons>
-              <text>{{ item.tagContent }}</text>
+              <text>{{
+                item.tagContent.length > 5
+                  ? item.tagContent.substring(0, 5) + '...'
+                  : item.tagContent
+              }}</text>
             </view>
           </view>
         </view>
@@ -200,6 +204,7 @@ const columns = computed(() => {
   postList.value.forEach((item, index) => {
     cols[index % columnCount].push(item)
   })
+  console.log(postList.value)
   return cols
 })
 // 页面加载时加载帖子数据
@@ -346,10 +351,11 @@ onReachBottom(() => {
   margin-bottom: 20rpx;
 
   .avatar {
-    width: 80rpx;
-    height: 80rpx;
+    width: 60rpx;
+    height: 60rpx;
     border-radius: 50%;
     margin-right: 20rpx;
+    margin-left: 5px;
   }
 
   .user-text {

@@ -84,7 +84,6 @@ public class PostController extends BaseController
     @PostMapping
     public AjaxResult add(@RequestBody Post post)
     {
-
         return toAjax(postService.insertPost(post));
     }
 

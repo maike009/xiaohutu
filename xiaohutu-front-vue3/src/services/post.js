@@ -19,3 +19,14 @@ export function getPostDetailAPI(id) {
     method: 'GET'
   })
 }
+
+/**
+ * 发布帖子
+ */
+export function publishPostAPI(data) {
+  return http({
+    url: '/post/post',
+    method: 'POST',
+    data
+  })
+}

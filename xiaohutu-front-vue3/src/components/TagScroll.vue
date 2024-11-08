@@ -48,6 +48,7 @@ const selectTag = (tagId) => {
 }
 
 .tags-scroll {
+  margin-top: 60px;
   white-space: nowrap;
 }
 

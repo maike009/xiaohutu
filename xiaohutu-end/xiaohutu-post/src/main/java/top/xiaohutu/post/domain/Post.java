@@ -52,7 +52,7 @@ public class Post extends BaseEntity
 
     /** 标签 */
     @Excel(name = "标签")
-    private Long tagId;
+    private String tagId;
 
     /** 发布位置 */
     @Excel(name = "发布位置")
@@ -128,12 +128,12 @@ public class Post extends BaseEntity
     {
         return commentCount;
     }
-    public void setTagId(Long tagId) 
+    public void setTagId(String tagId)
     {
         this.tagId = tagId;
     }
 
-    public Long getTagId() 
+    public String getTagId()
     {
         return tagId;
     }

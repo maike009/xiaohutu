@@ -1,6 +1,233 @@
+<script setup>
+import { computed, ref, reactive, onMounted, nextTick } from 'vue'
+import { onBackPress, onLoad } from '@dcloudio/uni-app'
+import { useUserStore } from '@/stores'
+import { getTagListAPI } from '@/services/tag'
+import { publishPostAPI } from '@/services/post'
+
+// 创建一个响应式对象来存储帖子数据
+const postData = reactive({
+  postTitle: '',
+  contentText: '',
+  contentImage: '',
+  tagId: '',
+  isPublic: 0
+})
+
+const switchPublic = ref(true)
+// 创建一个引用对象来存储标签列表
+const tags = ref([])
+// 创建一个引用对象来存储选中的标签列表
+const selectedTags = ref([])
+// 创建一个引用对象来存储图片列表
+const images = ref([])
+// 创建一个引用对象来存储标签区域的宽度
+const tagsWrapperWidth = ref(0)
+// 创建一个引用对象来存储上一个页面的路径
+const lastPath = ref('')
+
+// 计算表单是否有效，确保帖子标题、内容文本和选中的标签不为空
+const isFormValid = computed(() => {
+  return (
+    postData.postTitle.trim() !== '' &&
+    postData.contentText.trim() !== '' &&
+    selectedTags.value.length > 0
+  )
+})
+
+// 计算是否有内容，包括帖子标题、内容文本、图片和选中的标签
+const hasContent = computed(() => {
+  return (
+    postData.postTitle.trim() !== '' ||
+    postData.contentText.trim() !== '' ||
+    images.value.length > 0 ||
+    selectedTags.value.length > 0
+  )
+})
+
+// 定义最多可以上传的图片数量
+const MAX_IMAGES = 9
+// 定义图片的最大大小
+const MAX_SIZE = 10 * 1024 * 1024
+
+/**
+ * 选择图片函数，用于从相册或相机选择图片
+ * 此函数会检查已选图片数量，压缩图片，验证图片大小，并添加到图片列表中
+ */
+const chooseImage = async () => {
+  try {
+    const res = await uni.chooseImage({
+      count: MAX_IMAGES - images.value.length,
+      sizeType: ['compressed', 'original'],
+      sourceType: ['album', 'camera']
+    })
+
+    res.tempFiles.forEach((file) => {
+      if (file.size > MAX_SIZE) {
+        uni.showToast({ title: '图片不能超过10MB', icon: 'none' })
+        return
+      }
+      if (images.value.length < MAX_IMAGES) {
+        images.value.push({ file, preview: file.path })
+      }
+    })
+  } catch (err) {
+    console.error('选择图片出错', err)
+  }
+}
+
+/**
+ * 删除图片函数，根据索引从图片列表中移除图片
+ * @param {number} index - 图片在列表中的索引
+ */
+const deleteImage = (index) => {
+  images.value.splice(index, 1)
+}
+
+/**
+ * 切换标签函数，用于添加或移除选中的标签
+ * @param {string} tagId - 标签的ID
+ */
+const toggleTag = (tagId) => {
+  const index = selectedTags.value.indexOf(tagId)
+  if (index === -1) {
+    selectedTags.value.push(tagId)
+  } else {
+    selectedTags.value.splice(index, 1)
+  }
+}
+
+/**
+ * 获取标签列表函数，用于从服务器获取标签数据
+ * 此函数会过滤掉ID为0的标签，并在获取到标签后计算标签区域的宽度
+ */
+const getTags = async () => {
+  try {
+    const res = await getTagListAPI()
+    tags.value = res.rows?.filter((item) => item.id !== 0)
+    nextTick(() => calculateTagsWidth())
+  } catch (error) {
+    console.error('获取标签失败:', error)
+    uni.showToast({ title: '获取标签失败', icon: 'none' })
+  }
+}
+
+/**
+ * 计算标签区域宽度的函数
+ * 此函数会查询所有标签项的宽度，并计算总宽度
+ */
+const calculateTagsWidth = () => {
+  const query = uni.createSelectorQuery().in(this)
+  query
+    .selectAll('.tag-item')
+    .boundingClientRect((rects) => {
+      let totalWidth = 0
+      rects.forEach((rect) => {
+        totalWidth += rect.width + 10
+      })
+      tagsWrapperWidth.value = totalWidth
+    })
+    .exec()
+}
+
+/**
+ * 发布帖子函数，用于将帖子数据上传到服务器
+ * 此函数会验证表单有效性，上传图片，并准备帖子数据
+ */
+const publishPost = async () => {
+  if (!isFormValid.value) {
+    uni.showToast({ title: '请填写标题、内容并选择至少一个标签', icon: 'none' })
+    return
+  }
+
+  try {
+    const uploadPromises = images.value.map((image) =>
+      uni.uploadFile({
+        url: 'http://localhost:8080/common/uploads', // 你的上传地址
+        header: { Authorization: useUserStore().token },
+        filePath: image.file.path,
+        name: 'files',
+        formData: { description: '图片上传测试' }
+      })
+    )
+
+    const results = await Promise.all(uploadPromises)
+    postData.contentImage = results.map((result) => JSON.parse(result.data).fileNames).join(',')
+    postData.tagId = selectedTags.value.join(',')
+    postData.isPublic = switchPublic.value ? 0 : 1
+
+    console.log('发布帖子:', postData)
+    const res = await publishPostAPI(postData)
+    console.log(res, '帖子发布成功')
+
+    // 清空表单
+    // 发布成功后清空表单
+    selectedTags.value = []
+    images.value = []
+    Object.assign(postData, {
+      postTitle: '',
+      contentText: '',
+      contentImage: '',
+      tagId: '',
+      isPublic: 0
+    })
+
+    uni.showToast({ title: '发布成功', icon: 'success' })
+  } catch (error) {
+    console.error('发布帖子失败:', error)
+    uni.showToast({ title: '发布失败', icon: 'none' })
+  }
+}
+
+// 页面加载时，获取上一个页面的路径，并获取标签列表
+onLoad((options) => {
+  lastPath.value = options.lastPath
+  getTags()
+})
+
+/**
+ * 处理返回逻辑，如果页面上有内容未保存，则提示用户是否保存到草稿箱
+ */
+const handleBack = () => {
+  if (hasContent.value) {
+    uni.showModal({
+      title: '提示',
+      content: '有内容没有保存，是否存入草稿箱？',
+      success: (res) => {
+        if (res.confirm) {
+          console.log('保存草稿:', {
+            title: postData.postTitle,
+            content: postData.contentText,
+            images: images.value, // 使用images.value
+            tags: selectedTags.value // 使用selectedTags.value
+          })
+          uni.showToast({ title: '已保存到草稿箱', icon: 'success' })
+        }
+        uni.switchTab({ url: `/pages/${lastPath.value}/${lastPath.value}` })
+      }
+    })
+  } else {
+    uni.switchTab({ url: `/pages/${lastPath.value}/${lastPath.value}` })
+  }
+}
+
+// 监听页面返回操作，如果有未保存的内容，则调用 handleBack 函数处理
+onBackPress(() => {
+  if (hasContent.value) {
+    handleBack()
+    return true // 阻止默认返回行为
+  }
+  return false // 允许默认返回行为
+})
+
+// 页面挂载后，计算标签区域的宽度
+onMounted(() => {
+  nextTick(() => calculateTagsWidth())
+})
+</script>
+
 <template>
   <view class="post-page">
-    <!-- 自定义导航栏 -->
     <view class="custom-nav">
       <view class="nav-left" @tap="handleBack">
         <text class="iconfont icon-back">←</text>
@@ -9,18 +236,21 @@
     </view>
 
     <view class="post-container">
-      <!-- 输入区域 -->
       <view class="input-group">
-        <input class="title-input" v-model="postTitle" placeholder="请输入标题" maxlength="50" />
+        <input
+          class="title-input"
+          v-model="postData.postTitle"
+          placeholder="请输入标题"
+          maxlength="50"
+        />
         <textarea
           class="content-input"
-          v-model="postContent"
+          v-model="postData.contentText"
           placeholder="分享你的想法..."
           maxlength="1000"
         />
       </view>
 
-      <!-- 标签选择器 -->
       <view class="tags-container">
         <scroll-view class="tags-scroll" scroll-x="true" :show-scrollbar="false" :enhanced="true">
           <view class="tags-wrapper">
@@ -37,7 +267,6 @@
         </scroll-view>
       </view>
 
-      <!-- 图片上传区域 -->
       <view class="image-upload">
         <view v-for="(image, index) in images" :key="index" class="image-item">
           <image :src="image.preview" mode="aspectFill" />
@@ -48,229 +277,15 @@
         </view>
       </view>
 
+      <view class="public-switch">
+        <text>是否公开帖子</text>
+        <switch style="transform: scale(0.7)" :checked="switchPublic" color="#22a0fe" />
+      </view>
+
       <button class="publish-btn" @tap="publishPost" :disabled="!isFormValid">发布</button>
     </view>
   </view>
 </template>
-
-<script setup>
-import { computed, ref, onMounted, nextTick } from 'vue'
-import { onBackPress, onLoad } from '@dcloudio/uni-app'
-import { useUserStore } from '@/stores'
-import { getTagListAPI } from '@/services/tag'
-
-const postTitle = ref('')
-const postContent = ref('')
-const images = ref([])
-const tags = ref([])
-const selectedTags = ref([])
-const tagsWrapperWidth = ref(0)
-
-const isFormValid = computed(() => {
-  return (
-    postTitle.value.trim() !== '' &&
-    postContent.value.trim() !== '' &&
-    selectedTags.value.length > 0
-  )
-})
-
-const hasContent = computed(() => {
-  return (
-    postTitle.value.trim() !== '' ||
-    postContent.value.trim() !== '' ||
-    images.value.length > 0 ||
-    selectedTags.value.length > 0
-  )
-})
-
-// 图片上传逻辑
-const MAX_IMAGES = 9
-const MAX_SIZE = 10 * 1024 * 1024 // 10MB
-
-const chooseImage = async () => {
-  try {
-    const res = await uni.chooseImage({
-      count: 9 - images.value.length,
-      sizeType: ['compressed', 'original'],
-      sourceType: ['album', 'camera']
-    })
-
-    res.tempFiles.forEach((file) => {
-      if (file.size > MAX_SIZE) {
-        uni.showToast({ title: '图片不能超过10MB', icon: 'none' })
-        return
-      }
-      if (images.value.length >= MAX_IMAGES) {
-        uni.showToast({ title: '最多上传9张图片', icon: 'none' })
-        return
-      }
-      if (file.size <= MAX_SIZE && images.value.length < MAX_IMAGES) {
-        images.value.push({
-          file,
-          preview: file.path
-        })
-      }
-    })
-  } catch (err) {
-    console.log('选择图片出错', err)
-  }
-}
-
-const deleteImage = (index) => {
-  images.value.splice(index, 1)
-}
-
-// 标签选择逻辑
-const toggleTag = (tagId) => {
-  const index = selectedTags.value.indexOf(tagId)
-  if (index === -1) {
-    selectedTags.value.push(tagId)
-  } else {
-    selectedTags.value.splice(index, 1)
-  }
-}
-
-const getTags = async () => {
-  try {
-    const res = await getTagListAPI()
-    tags.value = res.rows?.filter((item) => item.id !== 0)
-    nextTick(() => {
-      calculateTagsWidth()
-    })
-  } catch (error) {
-    console.error('获取标签失败:', error)
-    uni.showToast({
-      title: '获取标签失败',
-      icon: 'none'
-    })
-  }
-}
-
-const calculateTagsWidth = () => {
-  const query = uni.createSelectorQuery().in(this)
-  query
-    .selectAll('.tag-item')
-    .boundingClientRect((rects) => {
-      let totalWidth = 0
-      rects.forEach((rect) => {
-        totalWidth += rect.width + 10 // 10 is the margin
-      })
-      tagsWrapperWidth.value = totalWidth
-    })
-    .exec()
-}
-
-const onScroll = (e) => {
-  // 可以在这里添加滚动相关的逻辑，如果需要的话
-  console.log('Scrolling', e)
-}
-
-const publishPost = async () => {
-  if (!isFormValid.value) {
-    uni.showToast({
-      title: '请填写标题、内容并选择至少一个标签',
-      icon: 'none'
-    })
-    return
-  }
-
-  // 图片上传逻辑
-  const uploadPromises = images.value.map((image) => {
-    return uni.uploadFile({
-      url: 'http://localhost:8080/common/uploads',
-      header: {
-        Authorization: useUserStore().token
-      },
-      filePath: image.file.path,
-      name: 'files',
-      formData: {
-        description: '图片上传测试'
-      }
-    })
-  })
-
-  try {
-    const results = await Promise.all(uploadPromises)
-    const postImageUrl = results.map((result) => JSON.parse(result.data).fileNames).join(',')
-
-    // 这里通常会发送帖子数据到后端
-    console.log('发布帖子:', {
-      title: postTitle.value,
-      content: postContent.value,
-      images: postImageUrl,
-      tags: selectedTags.value
-    })
-
-    // 发布成功后清空表单
-    postTitle.value = ''
-    postContent.value = ''
-    images.value = []
-    selectedTags.value = []
-
-    uni.showToast({
-      title: '发布成功',
-      icon: 'success'
-    })
-  } catch (error) {
-    console.error('发布帖子失败:', error)
-    uni.showToast({
-      title: '发布失败',
-      icon: 'none'
-    })
-  }
-}
-
-// 导航逻辑
-const lastPath = ref('')
-onLoad((options) => {
-  lastPath.value = options.lastPath
-  getTags() // 组件加载时获取标签
-})
-
-const handleBack = () => {
-  if (hasContent.value) {
-    uni.showModal({
-      title: '提示',
-      content: '有内容没有保存，是否存入草稿箱？',
-      success: (res) => {
-        if (res.confirm) {
-          console.log('保存草稿', {
-            title: postTitle.value,
-            content: postContent.value,
-            images: images.value,
-            tags: selectedTags.value
-          })
-          uni.showToast({
-            title: '已保存到草稿箱',
-            icon: 'success'
-          })
-        }
-        uni.switchTab({
-          url: `/pages/${lastPath.value}/${lastPath.value}`
-        })
-      }
-    })
-  } else {
-    uni.switchTab({
-      url: `/pages/${lastPath.value}/${lastPath.value}`
-    })
-  }
-}
-
-onBackPress(() => {
-  if (hasContent.value) {
-    handleBack()
-    return true
-  }
-  return false
-})
-
-onMounted(() => {
-  nextTick(() => {
-    calculateTagsWidth()
-  })
-})
-</script>
 
 <style lang="scss" scoped>
 .post-page {

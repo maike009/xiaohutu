@@ -1,7 +1,7 @@
 <template>
   <search-bar @get-post-list="handleGetPostList"></search-bar>
   <TagScroll />
-  <post-component :searchValue="searchValue"></post-component>
+  <post-component :searchValue="searchValue" style="padding-top: 20px"></post-component>
 </template>
 
 <script setup>
