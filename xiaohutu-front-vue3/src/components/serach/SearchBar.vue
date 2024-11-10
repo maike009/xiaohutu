@@ -15,31 +15,31 @@
   </div>
 </template>
 <script setup>
-import { ref } from 'vue'
+import { ref, defineEmits } from 'vue'
 const searchValue = ref('')
 
-const emit = defineEmits(['getPostList'])
+const emit = defineEmits(['getSearchValue'])
 
-function getPostList(res) {
-  console.log(res, 'getPostList')
-  emit('getPostList', res)
+function getSearchValue(res) {
+  console.log(res, 'getSearchValue')
+  emit('getSearchValue', res)
 }
 
 function search(res) {
   console.log('----search:', res)
-  getPostList(res.value)
+  getSearchValue(res.value)
 }
 function input(res) {
   console.log('----input:', res)
 }
 function clear(res) {
   console.log('----clear:', res)
-  getPostList(res.value)
+  getSearchValue(res.value)
 }
 function blur(res) {}
 function focus(e) {}
 function cancel(res) {
-  getPostList('')
+  getSearchValue('')
 }
 </script>
 <style lang="scss" scoped>

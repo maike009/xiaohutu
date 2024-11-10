@@ -9,5 +9,6 @@ public class PostVO extends Post {
     private String nickName;
     private String addr;
     private String tagContent;
+    private String avatar;
 
 }

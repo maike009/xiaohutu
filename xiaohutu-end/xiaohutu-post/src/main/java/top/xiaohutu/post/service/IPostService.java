@@ -62,4 +62,14 @@ public interface IPostService
 
 
     List<PostVO> selectFrontPostList(Post post);
+
+    List<PostVO> selectMyLikePostList(Post post);
+
+    List<PostVO> selectMyFavoritePostList(Post post);
+
+    List<PostVO> selectMyDraftList(Post post);
+
+    Post selectPostByIdIsDraft(Long id,Long userId);
+
+    List<PostVO> selectMyFrontPostList(Post post);
 }

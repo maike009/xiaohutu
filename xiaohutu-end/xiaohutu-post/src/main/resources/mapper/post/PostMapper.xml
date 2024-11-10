@@ -7,6 +7,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <resultMap type="PostVO" id="PostResult">
         <result property="userName"    column="user_name"    />
         <result property="nickName"    column="nick_name"    />
+        <result property="avatar" column="avatar"/>
         <result property="postTitle" column="post_title"/>
         <result property="addr"    column="addr"    />
         <result property="tagContent"    column="tag_content"    />
@@ -29,7 +30,31 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <sql id="selectPostVo">
-        select user_name,nick_name,post_title,tag_content,addr, id, user_id, content_text, content_image, like_count, comment_count, tag_id, address_id, is_public, favorite_count, draft_status, status, create_by, create_time, update_by, update_time from post_user_view
+        SELECT
+            puv.user_name,
+            puv.avatar,
+            puv.nick_name,
+            puv.post_title,
+            puv.tag_content,
+            puv.addr,
+            puv.id,
+            puv.user_id,
+            puv.content_text,
+            puv.content_image,
+            puv.like_count,
+            puv.comment_count,
+            puv.tag_id,
+            puv.address_id,
+            puv.is_public,
+            puv.favorite_count,
+            puv.draft_status,
+            puv.status,
+            puv.create_by,
+            puv.create_time,
+            puv.update_by,
+            puv.update_time
+        FROM
+            post_user_view puv
     </sql>
 
     <select id="selectPostList" parameterType="postVO" resultMap="PostResult">
@@ -46,15 +71,53 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="selectFrontPostList" resultMap="PostResult">
         <include refid="selectPostVo"/>
         <where>
-            <if test="searchValue != null "> and user_name like concat('%',#{searchValue},'%')</if>
-            <if test="searchValue != null "> or content_text like concat('%',#{searchValue},'%')</if>
-            and `status` = 0 and draft_status = 0 and is_public = 0
+            <if test="userId != null "> and user_id = #{userId}</if>
+            <if test="tagId != null and tagId != 0">and tag_id like concat('%',#{tagId},'%')</if>
+            <if test="searchValue != null and searchValue != '' "> and user_name like concat('%',#{searchValue},'%')</if>
+            <if test="searchValue != null and searchValue != ''"> or content_text like concat('%',#{searchValue},'%')</if>
+            and `status` = 0 and draft_status = 0 and is_public = 0 order by update_time desc
         </where>
     </select>
     
     <select id="selectPostById" parameterType="Long" resultMap="PostResult">
         <include refid="selectPostVo"/>
         where id = #{id}
+    </select>
+    <select id="selectMyLikeFrontPostList" resultMap="PostResult">
+        <include refid="selectPostVo"/>
+        inner join tb_user_like l on puv.id = l.post_id and l.user_id = #{userId}
+        <where>
+            and `status` = 0 and draft_status = 0 and is_public = 0 order by update_time desc
+        </where>
+    </select>
+    <select id="selectMyFavoritePostList" resultMap="PostResult">
+        <include refid="selectPostVo"></include>
+        inner join tb_user_collection f on puv.id = f.post_id and f.user_id = #{userId}
+        <where>
+            and `status` = 0 and draft_status = 0 and is_public = 0 order by update_time desc
+        </where>
+    </select>
+    <select id="selectMyDraftList" resultMap="PostResult">
+        <include refid="selectPostVo"/>
+        <where>
+            and puv.user_id = #{userId}  and `status` = 0 and draft_status = 1 and is_public = 0 order by create_time desc
+        </where>
+    </select>
+    <select id="selectPostByIdIsDraft" resultMap="PostResult">
+        <include refid="selectPostVo"></include>
+        <where>
+            and puv.user_id = #{userId} and puv.id = #{postId} and `status` = 0 and draft_status = 1 and is_public = 0 order by create_time desc
+        </where>
+    </select>
+    <select id="selectMyFrontPostList" resultMap="PostResult">
+        <include refid="selectPostVo"/>
+        <where>
+            <if test="userId != null "> and user_id = #{userId}</if>
+            <if test="tagId != null and tagId != 0">and tag_id like concat('%',#{tagId},'%')</if>
+            <if test="searchValue != null and searchValue != '' "> and user_name like concat('%',#{searchValue},'%')</if>
+            <if test="searchValue != null and searchValue != ''"> or content_text like concat('%',#{searchValue},'%')</if>
+            and draft_status = 0 and is_public = 0 order by update_time desc
+        </where>
     </select>
 
 
@@ -102,6 +165,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         update tb_post
         <trim prefix="SET" suffixOverrides=",">
             <if test="userId != null">user_id = #{userId},</if>
+            <if test="postTitle != null">post_title = #{postTitle},</if>
+
             <if test="contentText != null">content_text = #{contentText},</if>
             <if test="contentImage != null">content_image = #{contentImage},</if>
             <if test="likeCount != null">like_count = #{likeCount},</if>
@@ -129,5 +194,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <foreach item="id" collection="array" open="(" separator="," close=")">
             #{id}
         </foreach>
+        and user_id = #{userId}
     </delete>
 </mapper>

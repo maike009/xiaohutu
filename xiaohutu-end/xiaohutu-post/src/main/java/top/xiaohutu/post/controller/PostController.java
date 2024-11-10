@@ -15,9 +15,15 @@ import org.springframework.web.bind.annotation.RestController;
 import top.xiaohutu.common.annotation.Log;
 import top.xiaohutu.common.core.controller.BaseController;
 import top.xiaohutu.common.core.domain.AjaxResult;
+import top.xiaohutu.common.core.redis.RedisCache;
 import top.xiaohutu.common.enums.BusinessType;
+import top.xiaohutu.common.utils.SecurityUtils;
 import top.xiaohutu.post.domain.Post;
+import top.xiaohutu.post.domain.UserCollection;
+import top.xiaohutu.post.domain.UserLike;
 import top.xiaohutu.post.domain.vo.PostVO;
+import top.xiaohutu.post.mapper.UserCollectionMapper;
+import top.xiaohutu.post.mapper.UserLikeMapper;
 import top.xiaohutu.post.service.IPostService;
 import top.xiaohutu.common.utils.poi.ExcelUtil;
 import top.xiaohutu.common.core.page.TableDataInfo;
@@ -47,12 +53,78 @@ public class PostController extends BaseController
         return getDataTable(list);
     }
 
+
+    /**
+     * 获取前台帖子列表
+     * @param post
+     * @return
+     */
     @GetMapping("/frontList")
     public TableDataInfo frontList(Post post)
     {
         startPage();
         List<PostVO> list = postService.selectFrontPostList(post);
+
         return getDataTable(list);
+    }
+    /**
+     * 获取我的帖子列表
+     */
+    @GetMapping("/myList")
+    public TableDataInfo myList(Post post)
+    {
+        startPage();
+        Long userId = SecurityUtils.getUserId();
+        post.setUserId(userId);
+        List<PostVO> list = postService.selectMyFrontPostList(post);
+        return getDataTable(list);
+    }
+    /**
+     * 获取我点赞的帖子列表
+     */
+    @GetMapping("/myLikeList")
+    public TableDataInfo myLikeList(Post post)
+    {
+        startPage();
+        Long userId = SecurityUtils.getUserId();
+        post.setUserId(userId);
+        List<PostVO> list = postService.selectMyLikePostList(post);
+        return getDataTable(list);
+    }
+    /**
+     * 获取我收藏的帖子列表
+     */
+    @GetMapping("/myFavoriteList")
+    public TableDataInfo myFavoriteList(Post post)
+    {
+        startPage();
+        Long userId = SecurityUtils.getUserId();
+        post.setUserId(userId);
+        List<PostVO> list = postService.selectMyFavoritePostList(post);
+        return getDataTable(list);
+
+    }
+    /**
+     * 获取我的草稿箱
+     */
+    @GetMapping("/draftList")
+    public TableDataInfo draftList(Post post)
+    {
+        startPage();
+        Long userId = SecurityUtils.getUserId();
+        post.setUserId(userId);
+        List<PostVO> list = postService.selectMyDraftList(post);
+        return getDataTable(list);
+    }
+    /**
+     * 获取我草稿箱的帖子详情
+     */
+    @GetMapping("/draft/{id}")
+    public AjaxResult draft(@PathVariable("id") Long id)
+    {
+
+        Post post = postService.selectPostByIdIsDraft(id,SecurityUtils.getUserId());
+        return AjaxResult.success(post);
     }
 
     /**
@@ -68,13 +140,28 @@ public class PostController extends BaseController
         util.exportExcel(response, list, "帖子数据");
     }
 
+    @Autowired
+    UserLikeMapper userLikeMapper;
+
+    @Autowired
+    UserCollectionMapper userCollectionMapper;
     /**
      * 获取帖子详细信息
      */
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Long id)
     {
-        return success(postService.selectPostById(id));
+        AjaxResult ajaxResult = AjaxResult.success(postService.selectPostById(id));
+        Long userId = SecurityUtils.getUserId();
+        UserLike userLike = userLikeMapper.selectUserLikeByUserIdAndPostId(userId, id);
+        UserCollection userCollection = userCollectionMapper.selectUserCollectionByUserIdAndPostId(userId,id);
+        if (userLike != null){
+            ajaxResult.put("isLike", true);
+        }
+        if (userCollection != null){
+            ajaxResult.put("isFavorite", true);
+        }
+        return ajaxResult;
     }
 
     /**
@@ -90,7 +177,6 @@ public class PostController extends BaseController
     /**
      * 修改帖子
      */
-    @PreAuthorize("@ss.hasPermi('post:post:edit')")
     @Log(title = "帖子", businessType = BusinessType.UPDATE)
     @PutMapping
     public AjaxResult edit(@RequestBody Post post)
@@ -101,7 +187,6 @@ public class PostController extends BaseController
     /**
      * 删除帖子
      */
-    @PreAuthorize("@ss.hasPermi('post:post:remove')")
     @Log(title = "帖子", businessType = BusinessType.DELETE)
 	@DeleteMapping("/{ids}")
     public AjaxResult remove(@PathVariable Long[] ids)

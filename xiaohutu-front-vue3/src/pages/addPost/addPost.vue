@@ -1,18 +1,30 @@
 <script setup>
-import { computed, ref, reactive, onMounted, nextTick } from 'vue'
+import { computed, ref, watch, reactive, onMounted, nextTick } from 'vue'
 import { onBackPress, onLoad } from '@dcloudio/uni-app'
-import { useUserStore } from '@/stores'
+import { useTabStore, useUserStore } from '@/stores'
 import { getTagListAPI } from '@/services/tag'
-import { publishPostAPI } from '@/services/post'
+import {
+  delPostAPI,
+  getMyDraftPostDetailAPI,
+  getPostDetailAPI,
+  publishPostAPI,
+  updatePostAPI
+} from '@/services/post'
+import { baseUrl } from '@/utils/base'
 
 // 创建一个响应式对象来存储帖子数据
 const postData = reactive({
+  id: null,
+  userId: null,
   postTitle: '',
   contentText: '',
   contentImage: '',
   tagId: '',
-  isPublic: 0
+  isPublic: 0,
+  draftStatus: 0
 })
+//
+const userId = ref()
 
 const switchPublic = ref(true)
 // 创建一个引用对象来存储标签列表
@@ -21,6 +33,8 @@ const tags = ref([])
 const selectedTags = ref([])
 // 创建一个引用对象来存储图片列表
 const images = ref([])
+// 服务器图片路径
+const serverImagePath = ref([])
 // 创建一个引用对象来存储标签区域的宽度
 const tagsWrapperWidth = ref(0)
 // 创建一个引用对象来存储上一个页面的路径
@@ -95,6 +109,7 @@ const toggleTag = (tagId) => {
   } else {
     selectedTags.value.splice(index, 1)
   }
+  console.log(selectedTags.value, 'selectedTags')
 }
 
 /**
@@ -152,13 +167,24 @@ const publishPost = async () => {
     )
 
     const results = await Promise.all(uploadPromises)
-    postData.contentImage = results.map((result) => JSON.parse(result.data).fileNames).join(',')
+    serverImagePath.value = [
+      ...serverImagePath.value,
+      ...results.map((result) => JSON.parse(result.data).fileNames)
+    ]
+    postData.contentImage = serverImagePath.value.join(',')
     postData.tagId = selectedTags.value.join(',')
     postData.isPublic = switchPublic.value ? 0 : 1
 
-    console.log('发布帖子:', postData)
-    const res = await publishPostAPI(postData)
-    console.log(res, '帖子发布成功')
+    console.log('发布帖子,图片日志:', postData, 'imagePath', serverImagePath.value)
+    if (isEdit.value) {
+      postData.draftStatus = 0
+      const res = await updatePostAPI(postData)
+      console.log('修改成功', res)
+    } else {
+      postData.draftStatus = 0
+      const res = await publishPostAPI(postData)
+      console.log(res, '帖子发布成功')
+    }
 
     // 清空表单
     // 发布成功后清空表单
@@ -173,6 +199,7 @@ const publishPost = async () => {
     })
 
     uni.showToast({ title: '发布成功', icon: 'success' })
+    uni.switchTab({ url: `/pages/${lastPath.value}/${lastPath.value}` })
   } catch (error) {
     console.error('发布帖子失败:', error)
     uni.showToast({ title: '发布失败', icon: 'none' })
@@ -180,21 +207,108 @@ const publishPost = async () => {
 }
 
 // 页面加载时，获取上一个页面的路径，并获取标签列表
+const edit = ref(false)
 onLoad((options) => {
-  lastPath.value = options.lastPath
+  lastPath.value = useTabStore().lastTab
+  console.log(options, 'addddddddddd')
+  edit.value = options.edit
+  postId.value = options.id
+  if (postId.value) {
+    isEdit.value = true
+  }
   getTags()
 })
+// 编辑草稿
+const postId = ref()
+const isEdit = ref(false)
+watch(postId, async (newValue) => {
+  console.log('watch postId', newValue)
+  if (!edit.value) {
+    const res = await getMyDraftPostDetailAPI(newValue)
+    Object.assign(postData, res.data)
+    userId.value = useUserStore().profile.userId
+    console.log('watch postData', postData)
+    console.log(res, '获取草稿草稿', postData.userId, userId.value)
+  } else {
+    const res = await getPostDetailAPI(newValue)
+    Object.assign(postData, res.data)
+    userId.value = useUserStore().profile.userId
+    console.log('watch postData', postData)
+  }
+  console.log(postData.tagId.split(','))
+  postData.tagId.split(',').forEach((tagId) => {
+    selectedTags.value.push(Number.parseInt(tagId))
+  })
 
+  if (postData.contentImage !== '' && postData.contentImage !== null) {
+    postData.contentImage.split(',').forEach((item) => {
+      images.value.push({ file: { path: item }, preview: baseUrl + item })
+    })
+    serverImagePath.value = postData.contentImage.split(',')
+  }
+})
+
+// if (isEdit) {
+//   const res = await getMyDraftPostDetailAPI(postId.value)
+//   console.log(res, '获取草稿草稿')
+// }
 /**
  * 处理返回逻辑，如果页面上有内容未保存，则提示用户是否保存到草稿箱
  */
 const handleBack = () => {
+  console.log('handle back to ---', lastPath.value)
   if (hasContent.value) {
     uni.showModal({
       title: '提示',
       content: '有内容没有保存，是否存入草稿箱？',
-      success: (res) => {
+      success: async (res) => {
         if (res.confirm) {
+          try {
+            postData.draftStatus = 1
+            const uploadPromises = images.value.map((image) =>
+              uni.uploadFile({
+                url: 'http://localhost:8080/common/uploads', // 你的上传地址
+                header: { Authorization: useUserStore().token },
+                filePath: image.file.path,
+                name: 'files',
+                formData: { description: '图片上传测试' }
+              })
+            )
+
+            const results = await Promise.all(uploadPromises)
+            postData.contentImage = results
+              .map((result) => JSON.parse(result.data).fileNames)
+              .join(',')
+            postData.tagId = selectedTags.value.join(',')
+            postData.isPublic = switchPublic.value ? 0 : 1
+
+            console.log('发布帖子:', postData)
+            if (postData.id !== undefined && (postData.id !== '') !== null) {
+              const res = await updatePostAPI(postData)
+              console.log('修改成功', res)
+            } else {
+              const res = await publishPostAPI(postData)
+              console.log(res, '帖子发布成功')
+            }
+
+            // 清空表单
+            // 发布成功后清空表单
+            selectedTags.value = []
+            images.value = []
+            Object.assign(postData, {
+              postTitle: '',
+              contentText: '',
+              contentImage: '',
+              tagId: '',
+              isPublic: 0
+            })
+
+            uni.showToast({ title: '已添加到草稿箱', icon: 'success' })
+            uni.switchTab({ url: `/pages/${lastPath.value}/${lastPath.value}` })
+          } catch (err) {
+            console.error('添加到草稿箱失败:', err)
+            uni.showToast({ title: '发布失败', icon: 'none' })
+          }
           console.log('保存草稿:', {
             title: postData.postTitle,
             content: postData.contentText,
@@ -209,6 +323,23 @@ const handleBack = () => {
   } else {
     uni.switchTab({ url: `/pages/${lastPath.value}/${lastPath.value}` })
   }
+}
+// 删除草稿
+function delDraft(postId) {
+  console.log('delDraft', postId)
+  // 弹出确认
+  uni.showModal({
+    title: '提示',
+    content: '确定删除此草稿吗？',
+    success: (res) => {
+      if (res.confirm) {
+        const res = delPostAPI(postId)
+        console.log(res, '删除成功')
+        uni.showToast({ title: '删除成功', icon: 'success' })
+        uni.switchTab({ url: '/pages/user/user' })
+      }
+    }
+  })
 }
 
 // 监听页面返回操作，如果有未保存的内容，则调用 handleBack 函数处理
@@ -232,7 +363,7 @@ onMounted(() => {
       <view class="nav-left" @tap="handleBack">
         <text class="iconfont icon-back">←</text>
       </view>
-      <view class="nav-title">发布帖子</view>
+      <view class="nav-title">{{ isEdit ? '编辑' : '发布帖子' }}</view>
     </view>
 
     <view class="post-container">
@@ -282,7 +413,15 @@ onMounted(() => {
         <switch style="transform: scale(0.7)" :checked="switchPublic" color="#22a0fe" />
       </view>
 
-      <button class="publish-btn" @tap="publishPost" :disabled="!isFormValid">发布</button>
+      <button class="publish-btn" @tap="publishPost">发布</button>
+      <button
+        class="publish-btn"
+        style="background-color: #ef395b"
+        @tap="delDraft(postData.id)"
+        v-if="userId === postData.userId"
+      >
+        删除草稿
+      </button>
     </view>
   </view>
 </template>
@@ -436,12 +575,13 @@ onMounted(() => {
 }
 
 .publish-btn {
-  background-color: #ff2442;
+  background-color: #5d84e4;
   color: #fff;
   border: none;
   border-radius: 40rpx;
-  padding: 20rpx 0;
+  padding: 10rpx 0;
   font-size: 32rpx;
+  margin-bottom: 20px;
 
   &:disabled {
     background-color: #ccc;

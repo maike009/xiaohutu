@@ -3,6 +3,7 @@ package top.xiaohutu.system.mapper;
 import java.util.List;
 import org.apache.ibatis.annotations.Param;
 import top.xiaohutu.common.core.domain.entity.SysUser;
+import top.xiaohutu.system.domain.vo.UserVo;
 
 /**
  * 用户表 数据层
@@ -124,4 +125,7 @@ public interface SysUserMapper
      * @return 结果
      */
     public SysUser checkEmailUnique(String email);
+
+    UserVo selectMyInfo(Long userId);
+
 }

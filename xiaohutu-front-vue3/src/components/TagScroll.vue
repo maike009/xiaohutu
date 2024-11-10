@@ -23,9 +23,11 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, defineEmits } from 'vue'
 import { getTagListAPI } from '@/services/tag'
 import { onLoad } from '@dcloudio/uni-app'
+
+const emits = defineEmits(['getPostListTag'])
 // 标签数据
 const tags = ref([])
 async function getTags() {
@@ -38,6 +40,7 @@ const currentTag = ref(0)
 const selectTag = (tagId) => {
   currentTag.value = tagId
   console.log('Selected tag:', tagId)
+  emits('getPostListTag', tagId)
 }
 </script>
 

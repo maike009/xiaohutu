@@ -1,7 +1,6 @@
 package top.xiaohutu.post.service.impl;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import org.springframework.transaction.annotation.Transactional;
 import top.xiaohutu.common.utils.DateUtils;
@@ -70,10 +69,12 @@ public class PostServiceImpl implements IPostService
         String[] tagIds = post.getTagId().split(",");
         List<PostTag> postTags = new ArrayList<>();
         int countPost = postMapper.insertPost(post);
-        for (String tagId : tagIds) {
-            postTags.add(new PostTag().setPostId(post.getId()).setTagId(Long.valueOf(tagId)));
+        if (!"".equals(post.getTagId()) && post.getTagId() == null){
+            for (String tagId : tagIds) {
+                postTags.add(new PostTag().setPostId(post.getId()).setTagId(Long.valueOf(tagId)));
+            }
+            postTagMapper.saveBatch(postTags);
         }
-        postTagMapper.saveBatch(postTags);
         return countPost;
     }
 
@@ -86,8 +87,21 @@ public class PostServiceImpl implements IPostService
     @Override
     public int updatePost(Post post)
     {
+        if(!SecurityUtils.getUsername().equals("admin")){
+            post.setUserId(SecurityUtils.getUserId());
+            post.setStatus(1L);
+        }
         post.setUpdateTime(DateUtils.getNowDate());
-        return postMapper.updatePost(post);
+        String[] tagIds = post.getTagId().split(",");
+        List<PostTag> postTags = new ArrayList<>();
+        int countPost = postMapper.updatePost(post);
+        if (!"".equals(post.getTagId()) && post.getTagId() == null){
+            for (String tagId : tagIds) {
+                postTags.add(new PostTag().setPostId(post.getId()).setTagId(Long.valueOf(tagId)));
+            }
+            postTagMapper.saveBatch(postTags);
+        }
+        return countPost;
     }
 
     /**
@@ -99,7 +113,7 @@ public class PostServiceImpl implements IPostService
     @Override
     public int deletePostByIds(Long[] ids)
     {
-        return postMapper.deletePostByIds(ids);
+        return postMapper.deletePostByIds(ids,SecurityUtils.getUserId());
     }
 
     /**
@@ -117,5 +131,30 @@ public class PostServiceImpl implements IPostService
     @Override
     public List<PostVO> selectFrontPostList(Post post) {
         return postMapper.selectFrontPostList(post);
+    }
+
+    @Override
+    public List<PostVO> selectMyLikePostList(Post post) {
+        return postMapper.selectMyLikeFrontPostList(post);
+    }
+
+    @Override
+    public List<PostVO> selectMyFavoritePostList(Post post) {
+         return postMapper.selectMyFavoritePostList(post);
+    }
+
+    @Override
+    public List<PostVO> selectMyDraftList(Post post) {
+        return postMapper.selectMyDraftList(post);
+    }
+
+    @Override
+    public Post selectPostByIdIsDraft(Long id,Long userId) {
+        return postMapper.selectPostByIdIsDraft(id,userId);
+    }
+
+    @Override
+    public List<PostVO> selectMyFrontPostList(Post post) {
+        return postMapper.selectMyFrontPostList(post);
     }
 }

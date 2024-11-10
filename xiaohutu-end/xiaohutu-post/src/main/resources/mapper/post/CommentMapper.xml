@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="top.xiaohutu.post.mapper.CommentMapper">
+    
+    <resultMap type="commentVO" id="CommentResult">
+        <result property="userName"    column="user_name"    />
+        <result property="nickName"    column="nick_name"    />
+        <result property="avatar"    column="avatar"    />
+        <result property="commentId"    column="comment_id"    />
+        <result property="postId"    column="post_id"    />
+        <result property="userId"    column="user_id"    />
+        <result property="commentText"    column="comment_text"    />
+        <result property="commentTime"    column="comment_time"    />
+        <result property="commentImage"    column="comment_image"    />
+        <result property="parentCommentId"    column="parent_comment_id"    />
+        <result property="topId"    column="top_id"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectCommentVo">
+        select user_name,nick_name,avatar,comment_id, post_id, user_id, comment_text, comment_time, comment_image, parent_comment_id, top_id, create_time, update_time from comment_view
+    </sql>
+
+    <select id="selectCommentList" parameterType="Comment" resultMap="CommentResult">
+        <include refid="selectCommentVo"/>
+        <where>  
+            <if test="postId != null "> and post_id = #{postId}</if>
+            <if test="userId != null "> and user_id = #{userId}</if>
+            <if test="commentText != null  and commentText != ''"> and comment_text = #{commentText}</if>
+            <if test="commentImage != null  and commentImage != ''"> and comment_image = #{commentImage}</if>
+            <if test="parentCommentId != null "> and parent_comment_id = #{parentCommentId}</if>
+            <if test="topId != null "> and top_id = #{topId}</if>
+        </where>
+    </select>
+    
+    <select id="selectCommentByCommentId" parameterType="Long" resultMap="CommentResult">
+        <include refid="selectCommentVo"/>
+        where comment_id = #{commentId}
+    </select>
+
+    <insert id="insertComment" parameterType="Comment" useGeneratedKeys="true" keyProperty="commentId">
+        insert into comment
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="postId != null">post_id,</if>
+            <if test="userId != null">user_id,</if>
+            <if test="commentText != null">comment_text,</if>
+            <if test="commentTime != null">comment_time,</if>
+            <if test="commentImage != null">comment_image,</if>
+            <if test="parentCommentId != null">parent_comment_id,</if>
+            <if test="topId != null">top_id,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="postId != null">#{postId},</if>
+            <if test="userId != null">#{userId},</if>
+            <if test="commentText != null">#{commentText},</if>
+            <if test="commentTime != null">#{commentTime},</if>
+            <if test="commentImage != null">#{commentImage},</if>
+            <if test="parentCommentId != null">#{parentCommentId},</if>
+            <if test="topId != null">#{topId},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateComment" parameterType="Comment">
+        update comment
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="postId != null">post_id = #{postId},</if>
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="commentText != null">comment_text = #{commentText},</if>
+            <if test="commentTime != null">comment_time = #{commentTime},</if>
+            <if test="commentImage != null">comment_image = #{commentImage},</if>
+            <if test="parentCommentId != null">parent_comment_id = #{parentCommentId},</if>
+            <if test="topId != null">top_id = #{topId},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where comment_id = #{commentId}
+    </update>
+
+    <delete id="deleteCommentByCommentId" parameterType="Long">
+        delete from comment where comment_id = #{commentId}
+    </delete>
+
+    <delete id="deleteCommentByCommentIds" parameterType="String">
+        delete from comment where comment_id in 
+        <foreach item="commentId" collection="array" open="(" separator="," close=")">
+            #{commentId}
+        </foreach>
+    </delete>
+</mapper>

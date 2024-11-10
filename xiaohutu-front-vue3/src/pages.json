@@ -18,7 +18,7 @@
     {
       "path": "pages/user/user",
       "style": {
-        "navigationBarTitleText": ""
+        "navigationStyle": "custom"
       }
     },
     {
@@ -47,6 +47,26 @@
       "style": {
         "navigationBarTitleText": "",
         "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/editUser/editUser",
+      "style": {
+        "navigationBarTitleText": "编辑",
+        "navigationStyle": "default"
+      }
+    },
+    {
+      "path": "pages/userDetail/userDetail",
+      "style": {
+        "navigationBarTitleText": "",
+        "enablePullDownRefresh": false
+      }
+    },
+    {
+      "path": "pages/systemHelp/systemHelp",
+      "style": {
+        "navigationBarTitleText": "帮助"
       }
     }
   ],

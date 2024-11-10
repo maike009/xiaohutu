@@ -7,6 +7,13 @@ export function loginAPI(loginUser) {
     data: loginUser
   })
 }
+// 退出登录
+export function logoutAPI() {
+  return http({
+    url: '/logout',
+    method: 'POST'
+  })
+}
 
 // 注册方法
 export function registerAPI(data) {

@@ -1,11 +1,8 @@
 package top.xiaohutu.system.service.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-import javax.validation.Validator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,14 +19,17 @@ import top.xiaohutu.common.utils.spring.SpringUtils;
 import top.xiaohutu.system.domain.SysPost;
 import top.xiaohutu.system.domain.SysUserPost;
 import top.xiaohutu.system.domain.SysUserRole;
-import top.xiaohutu.system.mapper.SysPostMapper;
-import top.xiaohutu.system.mapper.SysRoleMapper;
-import top.xiaohutu.system.mapper.SysUserMapper;
-import top.xiaohutu.system.mapper.SysUserPostMapper;
-import top.xiaohutu.system.mapper.SysUserRoleMapper;
+import top.xiaohutu.system.domain.UserInfo;
+import top.xiaohutu.system.domain.vo.UserVo;
+import top.xiaohutu.system.mapper.*;
 import top.xiaohutu.system.service.ISysConfigService;
 import top.xiaohutu.system.service.ISysDeptService;
 import top.xiaohutu.system.service.ISysUserService;
+
+import javax.validation.Validator;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 用户 业务层处理
@@ -65,6 +65,8 @@ public class SysUserServiceImpl implements ISysUserService
     @Autowired
     protected Validator validator;
 
+    @Autowired
+    private UserInfoMapper userInfoMapper;
     /**
      * 根据条件分页查询用户列表
      * 
@@ -276,9 +278,15 @@ public class SysUserServiceImpl implements ISysUserService
      * @return 结果
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public boolean registerUser(SysUser user)
     {
-        return userMapper.insertUser(user) > 0;
+        int i = userMapper.insertUser(user);
+        UserInfo userInfo = new UserInfo();
+        userInfo.setUserId(user.getUserId());
+//        userInfo.setBio("");
+        int userInfoCount = userInfoMapper.insertUserInfo(userInfo);
+        return  i> 0 && userInfoCount > 0;
     }
 
     /**
@@ -546,5 +554,21 @@ public class SysUserServiceImpl implements ISysUserService
             successMsg.insert(0, "恭喜您，数据已全部导入成功！共 " + successNum + " 条，数据如下：");
         }
         return successMsg.toString();
+    }
+
+    @Override
+    public UserVo selectMyInfo(Long userId) {
+        return  userMapper.selectMyInfo(userId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int updateMyInfo(UserVo userVo) {
+        SysUser user = new SysUser();
+        UserInfo userInfo = userInfoMapper.selectUserInfoByUserId(userVo.getUserId());
+        BeanUtils.copyProperties(userVo,user);
+        BeanUtils.copyProperties(userVo,userInfo);
+        return userMapper.updateUser(user) + userInfoMapper.updateUserInfo(userInfo);
+
     }
 }

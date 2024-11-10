@@ -1,6 +1,8 @@
 package top.xiaohutu.post.mapper;
 
 import java.util.List;
+
+import org.apache.ibatis.annotations.Param;
 import top.xiaohutu.post.domain.Post;
 import top.xiaohutu.post.domain.vo.PostVO;
 
@@ -58,7 +60,17 @@ public interface PostMapper
      * @param ids 需要删除的数据主键集合
      * @return 结果
      */
-    public int deletePostByIds(Long[] ids);
+    public int deletePostByIds(@Param("array") Long[] ids,@Param("userId") Long userId);
 
     List<PostVO> selectFrontPostList(Post post);
+
+    List<PostVO> selectMyLikeFrontPostList(Post post);
+
+    List<PostVO> selectMyFavoritePostList(Post post);
+
+    List<PostVO> selectMyDraftList(Post post);
+
+    Post selectPostByIdIsDraft(@Param("postId") Long id,@Param("userId") Long userId);
+
+    List<PostVO> selectMyFrontPostList(Post post);
 }

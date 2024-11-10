@@ -27,6 +27,7 @@ import top.xiaohutu.common.enums.BusinessType;
 import top.xiaohutu.common.utils.SecurityUtils;
 import top.xiaohutu.common.utils.StringUtils;
 import top.xiaohutu.common.utils.poi.ExcelUtil;
+import top.xiaohutu.system.domain.vo.UserVo;
 import top.xiaohutu.system.service.ISysDeptService;
 import top.xiaohutu.system.service.ISysPostService;
 import top.xiaohutu.system.service.ISysRoleService;
@@ -116,11 +117,37 @@ public class SysUserController extends BaseController
         return ajax;
     }
 
-    @GetMapping("/userInfo/{userId}")
-    public AjaxResult userInfo(@PathVariable("userId") Long userId)
+    /**
+     * 获取自己的详细信息
+     * @param
+     * @return
+     */
+    @GetMapping("/myInfo")
+    public AjaxResult getMyInfo()
     {
-        SysUser user = userService.selectUserById(userId);
+        Long userId = SecurityUtils.getUserId();
+        UserVo user = userService.selectMyInfo(userId);
         return AjaxResult.success(user);
+    }
+    @GetMapping("/userInfo/{userId}")
+    public AjaxResult getUserInfo(@PathVariable Long userId)
+    {
+        return AjaxResult.success(userService.selectMyInfo(userId));
+    }
+
+    /**
+     * 修改自己的详细信息
+     * @param
+     * @return
+     */
+    @PostMapping("/editMyInfo")
+    public AjaxResult editMyInfo(@RequestBody UserVo userVo)
+    {
+        Long userId = SecurityUtils.getUserId();
+       if(!userVo.getUserId().equals(userId)){
+           return error("修改失败，用户ID不匹配");
+       }
+        return toAjax(userService.updateMyInfo(userVo));
     }
 
 

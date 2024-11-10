@@ -17,6 +17,7 @@ import top.xiaohutu.framework.manager.AsyncManager;
 import top.xiaohutu.framework.manager.factory.AsyncFactory;
 import top.xiaohutu.system.service.ISysConfigService;
 import top.xiaohutu.system.service.ISysUserService;
+import top.xiaohutu.system.service.IUserInfoService;
 
 /**
  * 注册校验方法
@@ -34,6 +35,8 @@ public class SysRegisterService
 
     @Autowired
     private RedisCache redisCache;
+
+
 
     /**
      * 注册
@@ -98,6 +101,7 @@ public class SysRegisterService
             sysUser.setSex(sex);
             sysUser.setNickName(nickname);
             boolean regFlag = userService.registerUser(sysUser);
+
             if (!regFlag)
             {
                 msg = "注册失败,请联系系统管理人员";

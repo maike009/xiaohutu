@@ -2,6 +2,7 @@ package top.xiaohutu.system.service;
 
 import java.util.List;
 import top.xiaohutu.common.core.domain.entity.SysUser;
+import top.xiaohutu.system.domain.vo.UserVo;
 
 /**
  * 用户 业务层
@@ -203,4 +204,8 @@ public interface ISysUserService
      * @return 结果
      */
     public String importUser(List<SysUser> userList, Boolean isUpdateSupport, String operName);
+
+    UserVo selectMyInfo(Long userId);
+
+    int updateMyInfo(UserVo userVo);
 }
