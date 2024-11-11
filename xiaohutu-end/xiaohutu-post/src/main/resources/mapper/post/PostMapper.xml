@@ -65,6 +65,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="likeCount != null "> and like_count = #{likeCount}</if>
             <if test="status != null "> and status = #{status}</if>
         </where>
+        order by create_time desc
     </select>
 
 
@@ -73,8 +74,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <where>
             <if test="userId != null "> and user_id = #{userId}</if>
             <if test="tagId != null and tagId != 0">and tag_id like concat('%',#{tagId},'%')</if>
-            <if test="searchValue != null and searchValue != '' "> and user_name like concat('%',#{searchValue},'%')</if>
+            <if test="searchValue != null and searchValue != '' "> and nick_name like concat('%',#{searchValue},'%')</if>
             <if test="searchValue != null and searchValue != ''"> or content_text like concat('%',#{searchValue},'%')</if>
+            <if test="searchValue != null and searchValue != ''"> or post_title like concat('%',#{searchValue},'%')</if>
             and `status` = 0 and draft_status = 0 and is_public = 0 order by update_time desc
         </where>
     </select>
@@ -117,6 +119,16 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="searchValue != null and searchValue != '' "> and user_name like concat('%',#{searchValue},'%')</if>
             <if test="searchValue != null and searchValue != ''"> or content_text like concat('%',#{searchValue},'%')</if>
             and draft_status = 0 and is_public = 0 order by update_time desc
+        </where>
+    </select>
+    <select id="selectMyHistoryPostList" resultMap="PostResult">
+        <include refid="selectPostVo"/> join tb_history th on th.post_id = puv.id
+        <where>
+             and th.user_id = #{userId}
+            <if test="tagId != null and tagId != 0">and tag_id like concat('%',#{tagId},'%')</if>
+            <if test="searchValue != null and searchValue != '' "> and user_name like concat('%',#{searchValue},'%')</if>
+            <if test="searchValue != null and searchValue != ''"> or content_text like concat('%',#{searchValue},'%')</if>
+             and draft_status = 0 and is_public = 0 order by update_time desc
         </where>
     </select>
 

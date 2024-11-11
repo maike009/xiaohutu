@@ -49,8 +49,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		<result property="bio" column="bio"/>
 		<result property="birthDate" column="birth_date"/>
 		<result property="totalLikes" column="total_likes"/>
-		<result property="followersCount" column="followers_count"/>
-		<result property="followingCount" column="follower_count"/>
+		<result property="followerCount" column="follower_count"/>
+		<result property="followingUserCount" column="following_user_count"/>
+		<result property="followerIds" column="follower_ids"/>
+		<result property="followingUserIds" column="following_user_ids"/>
 		<result property="addr" column="addr"/>
 		<result property="backgroundImage" column="background_image"/>
 
@@ -86,10 +88,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </sql>
 
 	<sql id="selectUserVoForView">
-		select user_id, dept_id,background_image, user_name, nick_name, user_type, email, phonenumber, sex,
-		       avatar, password, status, del_flag, login_ip, login_date, create_by, create_time,
-		       update_by, update_time, remark, bio, total_likes, followers_count,
-		       following_count, birth_date, addr
+		select uiv.user_id, dept_id,background_image, user_name, nick_name, user_type, email, phonenumber, sex,
+		       avatar, password, status, del_flag, login_ip, login_date, create_by, uiv.create_time,
+		       update_by, uiv.update_time, remark, bio, total_likes, follower_count,follower_ids,following_user_count,following_user_ids,
+		        birth_date, addr
 		from user_info_view uiv
 	</sql>
     
@@ -181,6 +183,23 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	<select id="selectMyInfo" resultMap="UserVoResult">
 		<include refid="selectUserVoForView"></include>
 		where uiv.user_id=#{userId}
+
+	</select>
+    <select id="selectFollowerUserList" resultMap="UserVoResult">
+		select uiv.user_id, dept_id,background_image, user_name, nick_name, user_type, email, phonenumber, sex,
+			   avatar, password, status, del_flag, login_ip, login_date, create_by, tf.create_time,
+			   update_by, tf.update_time, remark, bio, total_likes, follower_count,follower_ids,following_user_count,following_user_ids,
+			   birth_date, addr
+		from user_info_view uiv join tb_follower tf on tf.follower_id=uiv.user_id
+		 where tf.user_id=#{userId}
+	</select>
+	<select id="selectFollowingUserList" resultMap="UserVoResult">
+		select uiv.user_id, dept_id,background_image, user_name, nick_name, user_type, email, phonenumber, sex,
+			   avatar, password, status, del_flag, login_ip, login_date, create_by, tf.create_time,
+			   update_by, tf.update_time, remark, bio, total_likes, follower_count,follower_ids,following_user_count,following_user_ids,
+			   birth_date, addr
+		from user_info_view uiv join tb_follower tf on tf.user_id=uiv.user_id
+		where tf.follower_id=#{userId}
 
 	</select>
 

@@ -28,6 +28,7 @@ import top.xiaohutu.system.service.ISysUserService;
 
 import javax.validation.Validator;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -570,5 +571,17 @@ public class SysUserServiceImpl implements ISysUserService
         BeanUtils.copyProperties(userVo,userInfo);
         return userMapper.updateUser(user) + userInfoMapper.updateUserInfo(userInfo);
 
+    }
+
+    @Override
+    public List<UserVo> selectFollowerUserList() {
+        Long userId = SecurityUtils.getUserId();
+        return userMapper.selectFollowerUserList(userId);
+    }
+
+    @Override
+    public List<UserVo> selectFollowingUserList() {
+        Long userId = SecurityUtils.getUserId();
+        return userMapper.selectFollowingUserList(userId);
     }
 }

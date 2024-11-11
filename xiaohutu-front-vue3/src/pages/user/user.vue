@@ -2,7 +2,7 @@
 import { onMounted, ref, reactive, computed, watch } from 'vue'
 import { onLoad, onShow } from '@dcloudio/uni-app'
 import { useTabStore, useUserStore } from '@/stores'
-import { getUserDetailAPI } from '@/services/user'
+import { getUserDetailAPI /*followUserAPI, unfollowUserAPI */ } from '@/services/user'
 import { baseAvatarUrl, baseUrl } from '@/utils/base'
 import PostComponent from '@/components/postcontent/postComponent.vue'
 import {
@@ -77,6 +77,10 @@ const handleDrawerOptionClick = (option) => {
     uni.navigateTo({
       url: '/pages/systemHelp/systemHelp'
     })
+  } else if (option === 'history') {
+    uni.navigateTo({
+      url: '/pages/history/history'
+    })
   }
   // 这里可以添加相应的逻辑，比如导航到不同的页面
   isDrawerOpen.value.close()
@@ -97,11 +101,37 @@ const backgroundImage = computed(() => {
     : '/static/images/bgc2.jpg'
 })
 
+// 新增：关注状态
+const isFollowing = ref(false)
+
+// 新增：切换关注状态
+const toggleFollow = async (event) => {
+  event.stopPropagation() // 阻止事件冒泡
+  try {
+    if (isFollowing.value) {
+      await unfollowUserAPI(userDetail.value.userId)
+      isFollowing.value = false
+      userDetail.value.followersCount--
+    } else {
+      await followUserAPI(userDetail.value.userId)
+      isFollowing.value = true
+      userDetail.value.followersCount++
+    }
+  } catch (error) {
+    console.error('关注/取消关注失败:', error)
+    uni.showToast({
+      title: '操作失败，请重试',
+      icon: 'none'
+    })
+  }
+}
+
 // 获取用户详情
 async function getUserDetail() {
   try {
     const res = await getUserDetailAPI()
     userDetail.value = res.data
+    isFollowing.value = res.data.isFollowing // 假设API返回的数据中包含isFollowing字段
     console.log(res.data)
   } catch (error) {
     console.error('获取用户详情失败:', error)
@@ -257,6 +287,13 @@ const loadMorePosts = async () => {
 }
 // 帖子审核状态开关
 const isAuditEnabled = ref(true)
+
+// 去关注列表页面
+const goToFollower = (pageType) => {
+  uni.navigateTo({
+    url: `/pages/follower/follower?pageType=${pageType}`
+  })
+}
 </script>
 
 <template>
@@ -279,8 +316,14 @@ const isAuditEnabled = ref(true)
         mode="aspectFill"
       ></image>
       <view class="user-details">
-        <text class="nickname">{{ userDetail.nickName }}</text>
-        <text class="username">账号：{{ userDetail.userName }}</text>
+        <view style="display: flex; flex-direction: column">
+          <text class="nickname">{{ userDetail.nickName }}</text>
+          <text class="username">账号：{{ userDetail.userName }}</text>
+        </view>
+        <!--         新增：关注按钮 -->
+        <!--        <button class="follow-button" @tap.stop="toggleFollow">-->
+        <!--          {{ isFollowing ? '已关注' : '关注' }}-->
+        <!--        </button>-->
       </view>
     </view>
 
@@ -289,12 +332,12 @@ const isAuditEnabled = ref(true)
         <text class="stat-value">{{ userDetail.totalLikes || 0 }}</text>
         <text class="stat-label">获赞</text>
       </view>
-      <view class="stat-item">
-        <text class="stat-value">{{ userDetail.followersCount || 0 }}</text>
+      <view class="stat-item" @tap.stop="goToFollower('followingUser')">
+        <text class="stat-value">{{ userDetail.followingUserCount || 0 }}</text>
         <text class="stat-label">粉丝</text>
       </view>
-      <view class="stat-item">
-        <text class="stat-value">{{ userDetail.followingCount || 0 }}</text>
+      <view class="stat-item" @tap.stop="goToFollower('follower')">
+        <text class="stat-value">{{ userDetail.followerCount || 0 }}</text>
         <text class="stat-label">关注</text>
       </view>
     </view>
@@ -467,9 +510,14 @@ const isAuditEnabled = ref(true)
 
 .user-details {
   display: flex;
-  flex-direction: column;
+
+  align-items: flex-start;
 
   .nickname {
+    width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     font-size: 18px;
     font-weight: bold;
     color: #fff;
@@ -479,7 +527,9 @@ const isAuditEnabled = ref(true)
   .username {
     font-size: 14px;
     color: #eee;
+    padding-right: 20px;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    margin-bottom: 10px;
   }
 }
 
@@ -583,6 +633,22 @@ const isAuditEnabled = ref(true)
     text {
       font-size: 16px;
     }
+  }
+}
+
+// 新增：关注按钮样式
+.follow-button {
+  font-size: 14px;
+  padding: 5px 15px;
+  border-radius: 20px;
+  background-color: #a0e9ff;
+  color: #333;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #7ad7ff;
   }
 }
 </style>

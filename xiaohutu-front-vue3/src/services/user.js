@@ -22,3 +22,19 @@ export function updateUserDetailAPI(data) {
     data
   })
 }
+// 获取粉丝列表
+export function getFollowingUserListAPI(query) {
+  return http({
+    url: '/system/user/followingUsers',
+    method: 'GET',
+    data: query
+  })
+}
+// 获取关注列表
+export function getFollowerUserListAPI(query) {
+  return http({
+    url: '/system/user/followers',
+    method: 'GET',
+    data: query
+  })
+}

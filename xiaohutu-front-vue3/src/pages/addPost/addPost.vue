@@ -158,7 +158,7 @@ const publishPost = async () => {
   try {
     const uploadPromises = images.value.map((image) =>
       uni.uploadFile({
-        url: 'http://localhost:8080/common/uploads', // 你的上传地址
+        url: '/common/uploads', // 你的上传地址
         header: { Authorization: useUserStore().token },
         filePath: image.file.path,
         name: 'files',
@@ -267,7 +267,7 @@ const handleBack = () => {
             postData.draftStatus = 1
             const uploadPromises = images.value.map((image) =>
               uni.uploadFile({
-                url: 'http://localhost:8080/common/uploads', // 你的上传地址
+                url: '/common/uploads', // 你的上传地址
                 header: { Authorization: useUserStore().token },
                 filePath: image.file.path,
                 name: 'files',

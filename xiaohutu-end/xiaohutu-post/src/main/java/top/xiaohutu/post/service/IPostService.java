@@ -72,4 +72,6 @@ public interface IPostService
     Post selectPostByIdIsDraft(Long id,Long userId);
 
     List<PostVO> selectMyFrontPostList(Post post);
+
+    List<PostVO> selectMyHistoryPostList(Post post);
 }

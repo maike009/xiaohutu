@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="top.xiaohutu.post.mapper.FollowerMapper">
+    
+    <resultMap type="Follower" id="FollowerResult">
+        <result property="userId"    column="user_id"    />
+        <result property="followerId"    column="follower_id"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectFollowerVo">
+        select user_id, follower_id, create_time, update_time from tb_follower
+    </sql>
+
+    <select id="selectFollowerList" parameterType="Follower" resultMap="FollowerResult">
+        <include refid="selectFollowerVo"/>
+        <where>  
+        </where>
+    </select>
+    
+    <select id="selectFollowerByUserId" parameterType="Long" resultMap="FollowerResult">
+        <include refid="selectFollowerVo"/>
+        where user_id = #{userId}
+    </select>
+
+    <insert id="insertFollower" parameterType="Follower">
+        insert into tb_follower
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="userId != null">user_id,</if>
+            <if test="followerId != null">follower_id,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="userId != null">#{userId},</if>
+            <if test="followerId != null">#{followerId},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateFollower" parameterType="Follower">
+        update tb_follower
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="followerId != null">follower_id = #{followerId},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where user_id = #{userId}
+    </update>
+
+    <delete id="deleteFollowerByUserId" parameterType="Long">
+        delete from tb_follower where user_id = #{userId} and follower_id = #{followerId}
+    </delete>
+
+    <delete id="deleteFollowerByUserIds" parameterType="String">
+        delete from tb_follower where user_id in 
+        <foreach item="followerId" collection="array" open="(" separator="," close=")">
+            #{followerId}
+        </foreach>
+    </delete>
+</mapper>

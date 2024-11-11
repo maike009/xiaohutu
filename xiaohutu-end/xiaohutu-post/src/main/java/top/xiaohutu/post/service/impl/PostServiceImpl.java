@@ -157,4 +157,9 @@ public class PostServiceImpl implements IPostService
     public List<PostVO> selectMyFrontPostList(Post post) {
         return postMapper.selectMyFrontPostList(post);
     }
+
+    @Override
+    public List<PostVO> selectMyHistoryPostList(Post post) {
+        return postMapper.selectMyHistoryPostList(post);
+    }
 }

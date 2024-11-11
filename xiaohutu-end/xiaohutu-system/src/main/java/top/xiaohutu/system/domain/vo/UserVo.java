@@ -12,9 +12,48 @@ public class UserVo extends SysUser {
     // 总点赞数
     private int totalLikes;
     // 粉丝数量
-    private int followersCount;
+    private int followingUserCount;
+    // 粉丝的ids
+    private String followingUserIds;
     // 关注的人数
-    private int followingCount;
+    private int followerCount;
+
+    public String getFollowingUserIds() {
+        return followingUserIds;
+    }
+
+    public void setFollowingUserIds(String followingUserIds) {
+        this.followingUserIds = followingUserIds;
+    }
+
+    public String getFollowerIds() {
+        return followerIds;
+    }
+
+    public void setFollowerIds(String followerIds) {
+        this.followerIds = followerIds;
+    }
+
+    // 关注的人的ids
+    private String followerIds;
+
+
+    public int getFollowingUserCount() {
+        return followingUserCount;
+    }
+
+    public void setFollowingUserCount(int followingUserCount) {
+        this.followingUserCount = followingUserCount;
+    }
+
+    public int getFollowerCount() {
+        return followerCount;
+    }
+
+    public void setFollowerCount(int followerCount) {
+        this.followerCount = followerCount;
+    }
+
     // 出生日期
     @JsonFormat(pattern = "yyyy-MM-dd")
     private Date birthDate;
@@ -48,21 +87,7 @@ public class UserVo extends SysUser {
         this.totalLikes = totalLikes;
     }
 
-    public int getFollowersCount() {
-        return followersCount;
-    }
 
-    public void setFollowersCount(int followersCount) {
-        this.followersCount = followersCount;
-    }
-
-    public int getFollowingCount() {
-        return followingCount;
-    }
-
-    public void setFollowingCount(int followingCount) {
-        this.followingCount = followingCount;
-    }
 
     public Date getBirthDate() {
         return birthDate;

@@ -68,6 +68,20 @@
       "style": {
         "navigationBarTitleText": "帮助"
       }
+    },
+    {
+      "path": "pages/history/history",
+      "style": {
+        "navigationBarTitleText": "浏览记录",
+        "enablePullDownRefresh": false
+      }
+    },
+    {
+      "path": "pages/follower/follower",
+      "style": {
+        "navigationBarTitleText": "",
+        "enablePullDownRefresh": false
+      }
     }
   ],
   "globalStyle": {

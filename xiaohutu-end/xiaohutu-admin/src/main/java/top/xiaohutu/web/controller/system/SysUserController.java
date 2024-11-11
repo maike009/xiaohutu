@@ -96,6 +96,27 @@ public class SysUserController extends BaseController
     }
 
     /**
+     * 获取当前用户的关注列表
+     */
+    @GetMapping("/followers")
+    public TableDataInfo getMyFollowers()
+    {
+        startPage();
+        List<UserVo> list = userService.selectFollowerUserList();
+        return getDataTable(list);
+    }
+    /**
+     * 获取当前用户的粉丝列表
+     */
+    @GetMapping("/followingUsers")
+    public TableDataInfo getMyFollowingUsers()
+    {
+        startPage();
+        List<UserVo> list = userService.selectFollowingUserList();
+        return getDataTable(list);
+    }
+
+    /**
      * 根据用户编号获取详细信息
      */
     @PreAuthorize("@ss.hasPermi('system:user:query')")
@@ -129,6 +150,12 @@ public class SysUserController extends BaseController
         UserVo user = userService.selectMyInfo(userId);
         return AjaxResult.success(user);
     }
+
+    /**
+     *  查询用户信息
+     * @param userId
+     * @return
+     */
     @GetMapping("/userInfo/{userId}")
     public AjaxResult getUserInfo(@PathVariable Long userId)
     {

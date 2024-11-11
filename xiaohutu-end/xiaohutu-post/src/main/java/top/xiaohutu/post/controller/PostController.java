@@ -105,6 +105,18 @@ public class PostController extends BaseController
 
     }
     /**
+     * 获取我的历史记录帖子列表
+     */
+    @GetMapping("/historyList")
+    public TableDataInfo historyList(Post post)
+    {
+        startPage();
+        Long userId = SecurityUtils.getUserId();
+        post.setUserId(userId);
+        List<PostVO> list = postService.selectMyHistoryPostList(post);
+        return getDataTable(list);
+    }
+    /**
      * 获取我的草稿箱
      */
     @GetMapping("/draftList")

@@ -6,7 +6,7 @@
           v-for="item in column"
           :key="item.id"
           class="waterfall-item"
-          @click="goPostDetail(item)"
+          @tap="goPostDetail(item, $event)"
         >
           <image
             class="item-image"
@@ -62,6 +62,9 @@
                   : item.tagContent
               }}</text>
             </view>
+            <view v-if="isHistory" @click.stop="delHistory(item.id)">
+              <uni-icons type="trash" color="red" size="30"></uni-icons>
+            </view>
           </view>
         </view>
       </view>
@@ -75,13 +78,15 @@ import { ref, computed, defineProps } from 'vue'
 import { baseUrl, baseAvatarUrl } from '@/utils/base'
 import { formatTime } from '@/utils/xiaohutu'
 import { onReachBottom } from '@dcloudio/uni-app'
+import { delHistoryAPI } from '@/services/history'
 
 const props = defineProps({
   postList: Array,
   status: String,
   contentText: Object,
   loadMorePosts: Function,
-  isAuditEnabled: Boolean
+  isAuditEnabled: Boolean,
+  isHistory: Boolean
 })
 
 const columnCount = 2
@@ -92,9 +97,37 @@ const columns = computed(() => {
   })
   return cols
 })
-
+// 删除历史记录
+const delHistory = async (id) => {
+  console.log('删除历史记录的id', id)
+  uni.showLoading({
+    title: '删除中...'
+  })
+  // 弹出确认是否删除
+  uni.showModal({
+    title: '提示',
+    content: '确定删除此记录吗？',
+    success: (res) => {
+      if (res.confirm) {
+        delHistoryAPI(id)
+          .then((res) => {
+            console.log(res, '删除成功')
+            uni.showToast({ title: '删除成功', icon: 'success' })
+          })
+          .catch((err) => {
+            console.log(err, '删除失败')
+            uni.showToast({ title: '删除失败', icon: 'none' })
+          })
+          .finally(() => {
+            uni.hideLoading()
+          })
+      }
+    }
+  })
+}
 // 获取帖子详情
-const goPostDetail = (item) => {
+const goPostDetail = (item, e) => {
+  console.log('点击事件对象', e)
   if (item.draftStatus === 1) {
     uni.navigateTo({
       url: '/pages/addPost/addPost?id=' + item.id

@@ -208,4 +208,8 @@ public interface ISysUserService
     UserVo selectMyInfo(Long userId);
 
     int updateMyInfo(UserVo userVo);
+
+    List<UserVo> selectFollowerUserList();
+
+    List<UserVo> selectFollowingUserList();
 }

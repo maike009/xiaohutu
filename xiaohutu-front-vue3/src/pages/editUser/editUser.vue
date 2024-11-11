@@ -64,7 +64,7 @@ const chooseImage = (type) => {
     success: (res) => {
       const tempFilePath = res.tempFilePaths[0]
       uni.uploadFile({
-        url: 'http://localhost:8080/common/upload',
+        url: '/common/upload',
         filePath: tempFilePath,
         header: { Authorization: useUserStore().token },
         name: 'file',

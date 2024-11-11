@@ -24,6 +24,18 @@ export function getMyPostListAPI(query) {
 }
 
 /**
+ * 获取历史记录列表
+ */
+export function getHistoryPostListAPI(query) {
+  const { pageNum, pageSize } = query
+  return http({
+    url: '/post/post/historyList',
+    method: 'GET',
+    data: query
+  })
+}
+
+/**
  * 获取我点赞的帖子列表
  */
 export function getMyLikePostListAPI(query) {

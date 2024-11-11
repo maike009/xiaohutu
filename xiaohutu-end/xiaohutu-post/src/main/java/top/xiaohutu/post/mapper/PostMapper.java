@@ -73,4 +73,6 @@ public interface PostMapper
     Post selectPostByIdIsDraft(@Param("postId") Long id,@Param("userId") Long userId);
 
     List<PostVO> selectMyFrontPostList(Post post);
+
+    List<PostVO> selectMyHistoryPostList(Post post);
 }

@@ -128,4 +128,7 @@ public interface SysUserMapper
 
     UserVo selectMyInfo(Long userId);
 
+    List<UserVo> selectFollowerUserList(Long userId);
+
+    List<UserVo> selectFollowingUserList(Long userId);
 }

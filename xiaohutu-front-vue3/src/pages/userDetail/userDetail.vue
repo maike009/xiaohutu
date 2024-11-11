@@ -5,6 +5,8 @@ import { getUserInfoAPI } from '@/services/user'
 import { baseAvatarUrl, baseUrl } from '@/utils/base'
 import PostComponent from '@/components/postcontent/postComponent.vue'
 import { getPostListAPI } from '@/services/post'
+import { addFollowerAPI, delFollowerAPI } from '@/services/follower'
+import { useUserStore } from '@/stores'
 
 const props = defineProps({
   userId: String
@@ -12,7 +14,13 @@ const props = defineProps({
 // 页面显示时的处理
 onMounted((options) => {
   console.log(options?.userId, 'userid')
-  console.log(props.userId, 'props  ---#userid')
+  console.log(props.userId, 'props  ---#userid', useUserStore().profile.userId)
+  if (Number(props.userId) === useUserStore().profile.userId) {
+    uni.switchTab({
+      url: '/pages/user/user'
+    })
+    return
+  }
   getUserDetail(props.userId)
   queryParams.value.userId = props.userId
   getUserPostList()
@@ -50,6 +58,14 @@ async function getUserDetail(userId) {
     const res = await getUserInfoAPI(userId)
     userDetail.value = res.data
     console.log(res.data)
+    followingUserIdList.value = userDetail.value.followingUserIds?.split(',')
+    console.log(
+      followingUserIdList.value.includes(useUserStore().profile.userId.toString()),
+      '粉丝i的撒打算多发',
+      useUserStore().profile.userId.toString(),
+      followingUserIdList.value
+    )
+    isFollowing.value = followingUserIdList.value.includes(useUserStore().profile.userId.toString())
   } catch (error) {
     console.error('获取用户详情失败:', error)
     uni.showToast({
@@ -71,18 +87,6 @@ function changeTab(tab) {
   console.log('切换到标签:', tab)
 }
 
-// 处理页面滚动
-function handleScroll(event) {
-  const scrollTop = event.detail.scrollTop
-  // 调整背景图片的缩放和偏移
-  backgroundScale.value = 1 + scrollTop * 0.001 // 根据需要调整系数
-  backgroundOffsetY.value = scrollTop * 0.5 // 根据需要调整系数
-}
-function goToEditUserPage() {
-  uni.navigateTo({
-    url: '/pages/editUser/editUser'
-  })
-}
 // 帖子列表数据
 const postList = ref([])
 const status = ref('more')
@@ -146,6 +150,31 @@ const loadMorePosts = async () => {
     status.value = 'more'
   }
 }
+
+// 新增：关注状态
+const isFollowing = ref(false)
+// 粉丝的idlist
+const followingUserIdList = ref([])
+// 新增：切换关注状态
+const toggleFollow = async (userId) => {
+  console.log('关注者id', userId)
+  try {
+    if (isFollowing.value) {
+      await delFollowerAPI(userId)
+      isFollowing.value = false
+    } else {
+      await addFollowerAPI({ followerId: userId })
+      isFollowing.value = true
+    }
+    getUserDetail(userId)
+  } catch (error) {
+    console.error('关注/取消关注失败:', error)
+    uni.showToast({
+      title: '操作失败，请重试',
+      icon: 'none'
+    })
+  }
+}
 </script>
 
 <template>
@@ -164,8 +193,14 @@ const loadMorePosts = async () => {
         mode="aspectFill"
       ></image>
       <view class="user-details">
-        <text class="nickname">{{ userDetail.nickName }}</text>
-        <text class="username">账号：{{ userDetail.userName }}</text>
+        <view style="display: flex; flex-direction: column">
+          <text class="nickname">{{ userDetail.nickName }}</text>
+          <text class="username">账号：{{ userDetail.userName }}</text>
+        </view>
+        <!-- 新增：关注按钮 -->
+        <button class="follow-button" @tap.stop="toggleFollow(userDetail.userId)">
+          {{ isFollowing ? '已关注' : '关注' }}
+        </button>
       </view>
     </view>
 
@@ -175,11 +210,11 @@ const loadMorePosts = async () => {
         <text class="stat-label">获赞</text>
       </view>
       <view class="stat-item">
-        <text class="stat-value">{{ userDetail.followersCount || 0 }}</text>
+        <text class="stat-value">{{ userDetail.followingUserCount || 0 }}</text>
         <text class="stat-label">粉丝</text>
       </view>
       <view class="stat-item">
-        <text class="stat-value">{{ userDetail.followingCount || 0 }}</text>
+        <text class="stat-value">{{ userDetail.followerCount || 0 }}</text>
         <text class="stat-label">关注</text>
       </view>
     </view>
@@ -296,9 +331,13 @@ const loadMorePosts = async () => {
 
 .user-details {
   display: flex;
-  flex-direction: column;
+
+  align-items: flex-start;
 
   .nickname {
+    width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
     font-size: 18px;
     font-weight: bold;
     color: #fff;
@@ -308,7 +347,9 @@ const loadMorePosts = async () => {
   .username {
     font-size: 14px;
     color: #eee;
+    padding-right: 20px;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    margin-bottom: 10px;
   }
 }
 
@@ -376,5 +417,20 @@ const loadMorePosts = async () => {
 .content-list {
   min-height: 200px;
   color: #fff;
+}
+// 新增：关注按钮样式
+.follow-button {
+  font-size: 14px;
+  padding: 5px 15px;
+  border-radius: 20px;
+  background-color: #a0e9ff;
+  color: #333;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #7ad7ff;
+  }
 }
 </style>

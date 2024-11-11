@@ -8,6 +8,7 @@ import { addLikeAPI, delLikeAPI } from '@/services/like'
 import { useUserStore } from '@/stores'
 import { addFavoriteAPI, delFavoriteAPI } from '@/services/collection'
 import Comment from '@/components/Comment.vue'
+import { addHistoryAPI } from '@/services/history'
 // 帖子详情数据
 const postData = ref()
 const defaultAvatar = baseAvatarUrl // 默认头像路径
@@ -22,6 +23,7 @@ const props = defineProps({
 onLoad(async (options) => {
   console.log(options.id, 'postid', props.id)
   await getPostData(props.id)
+  await addHistoryAPI({ postId: props.id })
 })
 
 // 获取帖子详情数据
