@@ -38,7 +38,7 @@ const serverImagePath = ref([])
 // 创建一个引用对象来存储标签区域的宽度
 const tagsWrapperWidth = ref(0)
 // 创建一个引用对象来存储上一个页面的路径
-const lastPath = ref('')
+const lastPath = ref()
 
 // 计算表单是否有效，确保帖子标题、内容文本和选中的标签不为空
 const isFormValid = computed(() => {
@@ -304,7 +304,12 @@ const handleBack = () => {
             })
 
             uni.showToast({ title: '已添加到草稿箱', icon: 'success' })
-            uni.switchTab({ url: `/pages/${lastPath.value}/${lastPath.value}` })
+            if (lastPath.value === 0) {
+              uni.navigateBack()
+            } else {
+              uni.switchTab({ url: `/pages/${lastPath.value}/${lastPath.value}` })
+              console.log('返回')
+            }
           } catch (err) {
             console.error('添加到草稿箱失败:', err)
             uni.showToast({ title: '发布失败', icon: 'none' })
@@ -317,7 +322,12 @@ const handleBack = () => {
           })
           uni.showToast({ title: '已保存到草稿箱', icon: 'success' })
         }
-        uni.switchTab({ url: `/pages/${lastPath.value}/${lastPath.value}` })
+        if (lastPath.value === 0) {
+          uni.navigateBack()
+        } else {
+          console.log('返回 to ---', lastPath.value)
+          uni.switchTab({ url: `/pages/${lastPath.value}/${lastPath.value}` })
+        }
       }
     })
   } else {
@@ -420,7 +430,7 @@ onMounted(() => {
         @tap="delDraft(postData.id)"
         v-if="userId === postData.userId"
       >
-        删除草稿
+        删除
       </button>
     </view>
   </view>
