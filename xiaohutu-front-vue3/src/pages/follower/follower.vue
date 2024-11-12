@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, defineProps } from 'vue'
-import { baseUrl } from '@/utils/base'
+import { baseAvatarUrl, baseUrl } from '@/utils/base'
 
 // 假设我们有一个获取粉丝列表的API
 import { getFollowingUserListAPI, getFollowerUserListAPI } from '@/services/user'
@@ -78,7 +78,7 @@ function goToUserDetail(userId) {
         @tap.stop="goToUserDetail(fan.userId)"
       >
         <image
-          :src="fan.avatar ? baseUrl + fan.avatar : '/static/default-avatar.png'"
+          :src="fan.avatar ? baseUrl + fan.avatar : baseAvatarUrl"
           class="avatar"
           mode="aspectFill"
         />
@@ -89,7 +89,9 @@ function goToUserDetail(userId) {
       </view>
 
       <view v-if="loading" class="loading"> 加载中... </view>
-      <view v-if="finished" class="no-more"> 没有更多粉丝了 </view>
+      <view v-if="finished" class="no-more">
+        没有更多{{ pageType === 'followingUser' ? '粉丝' : '关注' }}了
+      </view>
     </scroll-view>
   </view>
 </template>

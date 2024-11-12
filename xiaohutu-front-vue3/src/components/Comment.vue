@@ -34,23 +34,53 @@ const finished = ref(false)
 const replyTo = ref(null)
 const replyContent = ref('')
 
+// 展开的评论ID集合
+const expandedComments = ref(new Set())
+
 // 获取评论列表
-const getCommentList = async (reset = false) => {
+const getCommentList = async (reset = false, keepExpanded = false) => {
   if (loading.value) return
   loading.value = true
 
-  if (reset) {
+  if (reset && !keepExpanded) {
     pageNum.value = 1
     finished.value = false
     commentList.value = []
+    expandedComments.value.clear()
   }
 
   try {
     const res = await getCommentListAPI(props.postId, pageNum.value, pageSize.value)
-    const newComments = (res.rows || []).filter((comment) => comment.topId === 0)
+    // 只获取一级评论（topId为0的评论）
+    const newComments = (res.rows || []).filter((comment) => {
+      // Initialize childrenCount from the API response
+      comment.childrenCount = comment.childrenCount || 0
+      return comment.topId === 0
+    }).map(comment => {
+      // For each top-level comment, find its children
+      const children = res.rows.filter(c => c.topId === comment.commentId)
+      comment.children = children
+      comment.childrenCount = children.length
+      return comment
+    })
+
     commentTotal.value = res.total
-    commentList.value.push(...newComments)
-    toggleExpand(newComments[0].commentId)
+
+    if (reset) {
+      commentList.value = newComments
+    } else {
+      commentList.value.push(...newComments)
+    }
+
+    // 如果需要保持展开状态，重新获取已展开评论的子评论
+    if (keepExpanded) {
+      for (const commentId of Array.from(expandedComments.value)) {
+        const comment = commentList.value.find(c => c.commentId === commentId)
+        if (comment) {
+          await getChildComments(commentId)
+        }
+      }
+    }
 
     if (newComments.length < pageSize.value) {
       finished.value = true
@@ -64,34 +94,40 @@ const getCommentList = async (reset = false) => {
   }
 }
 
-// 展开子评论
-const expandedComments = ref(new Set())
-const toggleExpand = (commentId) => {
-  if (expandedComments.value.has(commentId)) {
-    expandedComments.value.delete(commentId)
-  } else {
-    expandedComments.value.add(commentId)
-    getChildComments(commentId)
-  }
-}
-
 // 获取子评论
 const getChildComments = async (parentCommentId) => {
   try {
-    const res = await getCommentListAPI(props.postId, 1, 5, parentCommentId)
+    const res = await getCommentListAPI(props.postId, 1, 999, parentCommentId)
     const parentComment = commentList.value.find((c) => c.commentId === parentCommentId)
     if (parentComment) {
-      parentComment.children = res.rows || []
-      toggleExpand(parentComment.children[0].commentId)
+      // 确保子评论按时间排序
+      parentComment.children = (res.rows || []).sort((a, b) =>
+          new Date(a.commentTime) - new Date(b.commentTime)
+      )
+      // 更新子评论数量
+      parentComment.childrenCount = parentComment.children.length
     }
   } catch (error) {
     console.error('获取子评论失败:', error)
   }
 }
 
+// 展开/收起子评论
+const toggleExpand = async (commentId) => {
+  if (expandedComments.value.has(commentId)) {
+    expandedComments.value.delete(commentId)
+  } else {
+    expandedComments.value.add(commentId)
+    await getChildComments(commentId)
+  }
+}
+
 // 回复评论
-const replyToComment = (comment) => {
-  replyTo.value = comment
+const replyToComment = (comment, parentComment = null) => {
+  replyTo.value = {
+    comment,
+    parentComment
+  }
   replyContent.value = `@${comment.nickName} `
 }
 
@@ -103,47 +139,53 @@ const submitReply = async () => {
   }
 
   try {
-    // 这里需要实现提交回复的API
-    const res = await addCommentAPI({
+    const targetComment = replyTo.value.comment
+    const parentComment = replyTo.value.parentComment
+
+    const replyData = {
       postId: props.postId,
       userId: userStore.profile.userId,
-      parentCommentId: replyTo.value.commentId || 0,
-      topId: replyTo.value.topId || replyTo.value.commentId || 0,
+      parentCommentId: targetComment.commentId,
+      topId: parentComment ? parentComment.commentId : targetComment.commentId,
       commentText: replyContent.value
-    })
+    }
 
-    // 模拟API响应
-    // const res = {
-    //   commentId: Date.now(),
-    //   userId: userStore.profile.userId,
-    //   nickName: userStore.profile.nickName,
-    //   avatar: userStore.profile.avatar,
-    //   commentText: replyContent.value,
-    //   commentTime: new Date().toISOString(),
-    //   parentCommentId: replyTo.value.commentId,
-    //   topId: replyTo.value.topId || replyTo.value.commentId
-    // }
+    const res = await addCommentAPI(replyData)
 
     if (res) {
-      if (replyTo.value.topId === 0) {
-        // 回复根评论
-        const parentComment = commentList.value.find((c) => c.commentId === replyTo.value.commentId)
-        if (parentComment) {
-          parentComment.children = parentComment.children || []
-          parentComment.children.unshift(res)
+      // 更新评论数量
+      commentTotal.value++
+
+      // 更新本地评论列表
+      if (parentComment) {
+        // 回复子评论
+        const topLevelComment = commentList.value.find(c => c.commentId === parentComment.commentId)
+        if (topLevelComment) {
+          topLevelComment.children = topLevelComment.children || []
+          topLevelComment.children.push(res)
+          topLevelComment.childrenCount = (topLevelComment.childrenCount || 0) + 1
         }
       } else {
-        // 回复子评论
-        const topComment = commentList.value.find((c) => c.commentId === replyTo.value.topId)
-        if (topComment && topComment.children) {
-          topComment.children.unshift(res)
+        // 回复一级评论
+        const targetTopLevelComment = commentList.value.find(c => c.commentId === targetComment.commentId)
+        if (targetTopLevelComment) {
+          targetTopLevelComment.children = targetTopLevelComment.children || []
+          targetTopLevelComment.children.push(res)
+          targetTopLevelComment.childrenCount = (targetTopLevelComment.childrenCount || 0) + 1
         }
       }
+
+      // 确保回复的评论保持展开状态
+      if (parentComment) {
+        expandedComments.value.add(parentComment.commentId)
+      } else {
+        expandedComments.value.add(targetComment.commentId)
+      }
+
       replyContent.value = ''
       replyTo.value = null
       uni.showToast({ title: '回复成功', icon: 'success' })
-      props.refreshPostData()
-      getCommentList()
+      props.refreshPostData?.()
     }
   } catch (error) {
     console.error('提交回复失败:', error)
@@ -151,18 +193,25 @@ const submitReply = async () => {
   }
 }
 
-// 监听 postId 变化，重新加载评论
+// 监听 postId 变化
 watch(
-  () => props.postId,
-  () => {
-    getCommentList(true)
-  }
+    () => props.postId,
+    () => {
+      getCommentList(true)
+    }
 )
+
+// 监听外部传入的replyTo变化
 watch(
-  () => props.replyTo,
-  (newValue) => {
-    replyTo.value = newValue
-  }
+    () => props.replyTo,
+    (newValue) => {
+      if (newValue) {
+        replyTo.value = {
+          comment: newValue,
+          parentComment: null
+        }
+      }
+    }
 )
 
 // 组件挂载时加载评论
@@ -177,12 +226,14 @@ onMounted(() => {
       <text class="comment-title">评论 ({{ commentTotal }})</text>
     </view>
 
+
     <view v-for="comment in commentList" :key="comment.commentId" class="comment-item">
+      <!-- 一级评论 -->
       <view class="comment-main">
         <image
-          :src="comment.avatar ? baseUrl + comment.avatar : baseAvatarUrl"
-          class="avatar"
-          mode="aspectFill"
+            :src="comment.avatar ? baseUrl + comment.avatar : baseAvatarUrl"
+            class="avatar"
+            mode="aspectFill"
         />
         <view class="comment-content">
           <view class="comment-info">
@@ -193,32 +244,30 @@ onMounted(() => {
           <view class="comment-actions">
             <text @tap="replyToComment(comment)" class="action-text">回复</text>
             <text
-              @tap="toggleExpand(comment.commentId)"
-              class="action-text"
-              v-if="comment.children && comment.children.length"
+                v-if="comment.childrenCount > 0 || (comment.children && comment.children.length > 0) || commentList.find(c=>c.topId === comment.commentId) !== undefined"
+                @tap="toggleExpand(comment.commentId)"
+                class="action-text"
             >
-              {{ expandedComments.has(comment.commentId) ? '收起回复' : '查看回复' }}
+              {{ expandedComments.has(comment.commentId) ? '收起回复' : `查看回复(${comment.childrenCount || (comment.children && comment.children.length) || 0})` }}
             </text>
           </view>
         </view>
       </view>
 
-      <!-- 子评论 -->
+      <!-- 子评论列表 -->
       <view
-        v-if="
-          expandedComments.has(comment.commentId) && comment.children && comment.children.length > 0
-        "
-        class="sub-comments"
+          v-if="expandedComments.has(comment.commentId) && comment.children?.length > 0"
+          class="sub-comments"
       >
         <view
-          v-for="childComment in comment.children"
-          :key="childComment.commentId"
-          class="sub-comment-item"
+            v-for="childComment in comment.children"
+            :key="childComment.commentId"
+            class="sub-comment-item"
         >
           <image
-            :src="childComment.avatar ? baseUrl + childComment.avatar : baseAvatarUrl"
-            class="avatar"
-            mode="aspectFill"
+              :src="childComment.avatar ? baseUrl + childComment.avatar : baseAvatarUrl"
+              class="avatar"
+              mode="aspectFill"
           />
           <view class="comment-content">
             <view class="comment-info">
@@ -226,16 +275,13 @@ onMounted(() => {
               <text class="time">{{ formatTime(childComment.commentTime) }}</text>
             </view>
             <text class="comment-text">
-              <text v-if="childComment.parentCommentId !== comment.commentId" class="reply-to"
-                >回复 @{{
-                  comment.children.find((c) => c.commentId === childComment.parentCommentId)
-                    ?.nickName
-                }}：</text
-              >
+              <text v-if="childComment.parentCommentId !== comment.commentId" class="reply-to">
+                回复 @{{ comment.children.find(c => c.commentId === childComment.parentCommentId)?.nickName }}：
+              </text>
               {{ childComment.commentText }}
             </text>
             <view class="comment-actions">
-              <text @tap="replyToComment(childComment)" class="action-text">回复</text>
+              <text @tap="replyToComment(childComment, comment)" class="action-text">回复</text>
             </view>
           </view>
         </view>
@@ -248,10 +294,10 @@ onMounted(() => {
     <!-- 回复输入框 -->
     <view v-if="replyTo" class="reply-input">
       <input
-        v-model="replyContent"
-        type="text"
-        placeholder="请输入回复内容"
-        @confirm="submitReply"
+          v-model="replyContent"
+          type:="text"
+          :placeholder="'回复 ' + replyTo.comment.nickName === undefined ? '帖子':replyTo.comment.nickName"
+          @confirm="submitReply"
       />
       <button @tap="submitReply">发送</button>
     </view>

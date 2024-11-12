@@ -3,8 +3,8 @@
 // 请求基地址
 import { useUserStore } from '@/stores'
 
-// const baseURL = 'http://localhost:8080'
-const baseURL = 'http://192.168.0.185:8080'
+const baseURL = 'http://localhost:8080'
+// const baseURL = 'http://192.168.0.185:8080'
 
 // 拦截器配置
 const httpInterceptor = {
