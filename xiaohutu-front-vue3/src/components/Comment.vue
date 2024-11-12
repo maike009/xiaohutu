@@ -186,6 +186,7 @@ const submitReply = async () => {
       replyTo.value = null
       uni.showToast({ title: '回复成功', icon: 'success' })
       props.refreshPostData?.()
+      getCommentList(true)
     }
   } catch (error) {
     console.error('提交回复失败:', error)
