@@ -63,6 +63,8 @@ public class PostController extends BaseController
     public TableDataInfo frontList(Post post)
     {
         startPage();
+        // 在控制台打印一条黄色的日志
+        logger.warn("获取前台帖子列表的参数 {}",post);
         List<PostVO> list = postService.selectFrontPostList(post);
 
         return getDataTable(list);

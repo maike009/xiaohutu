@@ -50,6 +50,12 @@
               <uni-icons :type="'heart'" size="16"></uni-icons>
               <text>{{ item.likeCount || 0 }}</text>
             </view>
+
+            <view class="location" @tap="changeReplyTO">
+              <uni-icons type="chat" size="16"></uni-icons>
+              <text>{{ item.commentCount || 0 }}</text>
+            </view>
+
             <view class="location">
               <uni-icons :type="'star'" size="16"></uni-icons>
               <text>{{ item.favoriteCount || 0 }}</text>
@@ -249,7 +255,7 @@ onReachBottom(() => {
     color: #666;
 
     uni-icons {
-      margin-right: 6rpx;
+      margin-right: 3rpx;
     }
   }
 }
